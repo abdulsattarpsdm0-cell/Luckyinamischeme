@@ -1,0 +1,8 @@
+{
+  "name": "Lucky Inami Scheme User Panel",
+  "description": "A comprehensive real-time responsive dashboard for the Lucky Inami Scheme lottery platform, featuring token purchasing, live draw animations, wallet management, and referral tracking.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone"
+  ]
+}
