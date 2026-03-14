@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const { user, tokens, allTokens, lotteryPlans, isLoggedIn } = useUser();
+  const { user, allTokens, lotteryPlans, isLoggedIn } = useUser();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // ONLY SHOW ACTIVE PLANS ON USER FRONTEND
@@ -78,18 +78,13 @@ const HomePage: React.FC = () => {
             )}
 
             {isLoggedIn ? (
-              <div className="grid grid-cols-3 gap-2 md:gap-6 bg-slate-50 p-3 md:p-4 rounded-3xl border border-slate-100">
-                <div className="text-center px-1 md:px-4">
+              <div className="flex items-center space-x-4 bg-slate-50 p-3 md:p-4 rounded-3xl border border-slate-100">
+                <div className="text-center px-2 md:px-4">
                   <span className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance</span>
                   <span className="text-xs md:text-lg font-black text-emerald-600">Rs {user.walletBalance.toLocaleString()}</span>
                 </div>
-                <div className="w-px bg-slate-200 h-full"></div>
-                <div className="text-center px-1 md:px-4">
-                  <span className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Tokens</span>
-                  <span className="text-xs md:text-lg font-black text-indigo-600">{tokens.length}</span>
-                </div>
-                <div className="w-px bg-slate-200 h-full hidden md:block"></div>
-                <div className="text-center px-1 md:px-4 hidden md:block">
+                <div className="w-px bg-slate-200 h-8 md:h-12"></div>
+                <div className="text-center px-2 md:px-4">
                   <span className="block text-[8px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Winnings</span>
                   <span className="text-xs md:text-lg font-black text-amber-500">Rs {user.totalWinnings.toLocaleString()}</span>
                 </div>
