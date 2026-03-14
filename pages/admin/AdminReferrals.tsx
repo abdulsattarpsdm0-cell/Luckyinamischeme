@@ -207,48 +207,76 @@ const AdminReferrals: React.FC = () => {
              <span className="text-[9px] font-black text-indigo-600 uppercase tracking-widest border border-indigo-100 bg-indigo-50 px-3 py-1.5 rounded-full shadow-sm">Live Feed</span>
           </div>
 
-          <div className="overflow-x-auto no-scrollbar touch-pan-x">
-             <table className="w-full text-left min-w-[700px] border-collapse">
-                <thead>
-                   <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      <th className="py-5 px-8">Referrer</th>
-                      <th className="py-5 px-6">Plan</th>
-                      <th className="py-5 px-6 text-center">Status</th>
-                      <th className="py-5 px-8 text-right">Reward</th>
-                   </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                   {rewardLogs.map((log, i) => (
-                      <tr key={i} className="hover:bg-slate-50/50 transition-colors">
-                         <td className="py-5 px-8">
-                            <div className="flex items-center space-x-3">
-                               <div className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xs uppercase border border-white shadow-md flex-shrink-0">{log.user.charAt(0)}</div>
-                               <div className="min-w-0">
-                                  <span className="block font-black text-slate-900 text-xs uppercase truncate max-w-[150px]">{log.user}</span>
-                                  <span className="text-[9px] text-indigo-600 font-black uppercase tracking-widest">@{log.username}</span>
-                               </div>
-                            </div>
-                         </td>
-                         <td className="py-5 px-6 font-black text-slate-600 text-[10px] uppercase tracking-widest">{log.plan}</td>
-                         <td className="py-5 px-6 text-center">
-                            <div className="inline-flex items-center space-x-1.5 text-emerald-600 font-black text-[9px] uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
-                               <CheckCircle2 size={10} />
-                               <span>{log.goal} Done</span>
-                            </div>
-                         </td>
-                         <td className="py-5 px-8 text-right">
-                            <div className="inline-block bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md">
-                               {log.totalEarned} Tokens
-                            </div>
-                         </td>
-                      </tr>
-                   ))}
-                </tbody>
-             </table>
-          </div>
-          <div className="md:hidden py-4 px-6 flex justify-center items-center space-x-2 text-slate-300 border-t border-slate-50 bg-slate-50/10">
-             <ChevronRight size={14} className="animate-pulse" />
-             <span className="text-[8px] font-black uppercase tracking-[0.25em]">Swipe left to view full history</span>
+          <div className="w-full">
+            {/* Desktop Table */}
+            <div className="hidden md:block overflow-x-auto no-scrollbar touch-pan-x">
+               <table className="w-full text-left min-w-[700px] border-collapse">
+                  <thead>
+                     <tr className="bg-slate-50/50 text-[10px] font-black text-slate-400 uppercase tracking-widest">
+                        <th className="py-5 px-8">Referrer</th>
+                        <th className="py-5 px-6">Plan</th>
+                        <th className="py-5 px-6 text-center">Status</th>
+                        <th className="py-5 px-8 text-right">Reward</th>
+                     </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                     {rewardLogs.map((log, i) => (
+                        <tr key={i} className="hover:bg-slate-50/50 transition-colors">
+                           <td className="py-5 px-8">
+                              <div className="flex items-center space-x-3">
+                                 <div className="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xs uppercase border border-white shadow-md flex-shrink-0">{log.user.charAt(0)}</div>
+                                 <div className="min-w-0">
+                                    <span className="block font-black text-slate-900 text-xs uppercase truncate max-w-[150px]">{log.user}</span>
+                                    <span className="text-[9px] text-indigo-600 font-black uppercase tracking-widest">@{log.username}</span>
+                                 </div>
+                              </div>
+                           </td>
+                           <td className="py-5 px-6 font-black text-slate-600 text-[10px] uppercase tracking-widest">{log.plan}</td>
+                           <td className="py-5 px-6 text-center">
+                              <div className="inline-flex items-center space-x-1.5 text-emerald-600 font-black text-[9px] uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                                 <CheckCircle2 size={10} />
+                                 <span>{log.goal} Done</span>
+                              </div>
+                           </td>
+                           <td className="py-5 px-8 text-right">
+                              <div className="inline-block bg-slate-900 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-md">
+                                 {log.totalEarned} Tokens
+                              </div>
+                           </td>
+                        </tr>
+                     ))}
+                  </tbody>
+               </table>
+            </div>
+            {/* Mobile Cards */}
+            <div className="md:hidden flex flex-col divide-y divide-slate-50">
+               {rewardLogs.map((log, i) => (
+                  <div key={i} className="p-4 hover:bg-slate-50/50 transition-colors flex flex-col gap-3">
+                     <div className="flex justify-between items-start">
+                        <div className="flex items-center space-x-3">
+                           <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-sm uppercase border border-white shadow-md flex-shrink-0">{log.user.charAt(0)}</div>
+                           <div className="min-w-0">
+                              <span className="block font-black text-slate-900 text-sm uppercase truncate">{log.user}</span>
+                              <span className="text-[10px] text-indigo-600 font-black uppercase tracking-widest">@{log.username}</span>
+                           </div>
+                        </div>
+                        <div className="inline-block bg-slate-900 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-md flex-shrink-0">
+                           {log.totalEarned} Tokens
+                        </div>
+                     </div>
+                     <div className="flex justify-between items-center bg-slate-50 p-3 rounded-xl border border-slate-100 mt-1">
+                        <div className="flex flex-col">
+                           <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Plan</span>
+                           <span className="font-black text-slate-600 text-[11px] uppercase tracking-widest">{log.plan}</span>
+                        </div>
+                        <div className="inline-flex items-center space-x-1.5 text-emerald-600 font-black text-[10px] uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100">
+                           <CheckCircle2 size={12} />
+                           <span>{log.goal} Done</span>
+                        </div>
+                     </div>
+                  </div>
+               ))}
+            </div>
           </div>
       </div>
     </div>

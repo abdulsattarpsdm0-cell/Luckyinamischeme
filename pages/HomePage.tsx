@@ -196,117 +196,128 @@ const HomePage: React.FC = () => {
 
       {/* 3. Lotteries Grid */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-16 pb-12">
-        <div className="flex justify-between items-end mb-10 text-center md:text-left">
-          <div>
-            <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">Active Lotteries</h2>
-            <p className="text-sm font-medium text-slate-500">Pick a plan and try your luck for the next big draw.</p>
-          </div>
-          <Link to="/lotteries" className="hidden sm:flex text-xs font-black text-indigo-600 uppercase tracking-[0.2em] items-center hover:underline">
-            View All Plans <ChevronRight size={14} className="ml-1" />
-          </Link>
-        </div>
+        {['WEEKLY', 'MONTHLY'].map(cycle => {
+          const cyclePlans = activePlans.filter(p => p.drawCycle === cycle);
+          if (cyclePlans.length === 0) return null;
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {activePlans.map((plan) => {
-            const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
-            const percentage = Math.round((soldCount / plan.totalTokens) * 100);
-            const isSoldOut = soldCount >= plan.totalTokens;
-
-            return (
-              <div key={plan.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-2xl hover:border-indigo-100 group">
-                <div className="relative h-48 overflow-hidden">
-                  {plan.image ? (
-                    <img src={plan.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={plan.name} />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-500 bg-slate-50">
-                      {plan.icon}
-                    </div>
-                  )}
-                  <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white shadow-lg z-10 ${plan.drawCycle === 'WEEKLY' ? 'bg-indigo-600' : 'bg-pink-600'}`}>
-                     {plan.drawCycle}
-                  </div>
-                  
-                  <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-[8px] font-black uppercase tracking-widest text-white border border-white/10 shadow-lg">
-                     Total {plan.totalTokens} Tokens
-                  </div>
+          return (
+            <div key={cycle} className="mb-16 last:mb-0">
+              <div className="flex justify-between items-end mb-10 text-center md:text-left">
+                <div>
+                  <h2 className="text-2xl font-black text-slate-900 uppercase tracking-tight">{cycle} Lotteries</h2>
+                  <p className="text-sm font-medium text-slate-500">Pick a {cycle.toLowerCase()} plan and try your luck for the next big draw.</p>
                 </div>
-
-                <div className="p-8 flex flex-col flex-grow">
-                  <div className="flex justify-between items-start mb-6">
-                    <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{plan.name}</h3>
-                    <div className="text-right">
-                      <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Inami Item</span>
-                      <span className="text-sm font-black text-indigo-600">{plan.prizeName || `Rs ${plan.prizePerWinner.toLocaleString()}`}</span>
-                    </div>
-                  </div>
-
-                  {/* PERCENTAGE PROGRESS BAR */}
-                  <div className="mb-8 space-y-2">
-                    <div className="flex justify-between items-end">
-                       <div className="flex items-center space-x-1.5 text-slate-400">
-                          <Users size={12} />
-                          <span className="text-[9px] font-black uppercase tracking-widest">Filling Fast</span>
-                       </div>
-                       <span className={`text-[10px] font-black uppercase tracking-widest ${percentage > 80 ? 'text-red-600' : 'text-indigo-600'}`}>
-                         {percentage}% Sold
-                       </span>
-                    </div>
-                    <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner p-0.5">
-                       <div 
-                        className={`h-full rounded-full transition-all duration-1000 shadow-sm ${percentage > 80 ? 'bg-red-500 shadow-red-200' : 'bg-indigo-600 shadow-indigo-200'}`} 
-                        style={{ width: `${percentage}%` }}
-                       ></div>
-                    </div>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center italic">
-                       {soldCount} used / {plan.totalTokens - soldCount} spots left
-                    </p>
-                  </div>
-
-                  <div className="space-y-3 mb-8">
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-                      <div className="flex items-center space-x-2">
-                          <Wallet size={14} className="text-slate-300" />
-                          <span className="uppercase tracking-widest">Entry Fee</span>
-                      </div>
-                      <span className="font-black text-slate-900">PKR {plan.tokenPrice}</span>
-                    </div>
-                    
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-                      <div className="flex items-center space-x-2">
-                          <Hash size={14} className="text-slate-300" />
-                          <span className="uppercase tracking-widest">Total Numbers</span>
-                      </div>
-                      <span className="text-indigo-600 font-black">{plan.totalTokens.toLocaleString()} Spots</span>
-                    </div>
-
-                    <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
-                      <div className="flex items-center space-x-2">
-                          <Clock size={14} className="text-slate-300" />
-                          <span className="uppercase tracking-widest">Next Draw</span>
-                      </div>
-                      <span className="text-slate-900 font-black">{plan.drawTime}</span>
-                    </div>
-                  </div>
-
-                  <Link
-                    to={isSoldOut ? "#" : (isLoggedIn ? `/buy/${plan.id}` : "/login")}
-                    className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-2 transition-all shadow-xl shadow-slate-900/10 mt-auto ${
-                      isSoldOut 
-                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
-                        : 'bg-[#1a233a] hover:bg-indigo-600 text-white active:scale-95'
-                    }`}
-                    onClick={(e) => {
-                      if (isSoldOut) e.preventDefault();
-                    }}
-                  >
-                    <Ticket size={16} />
-                    <span>{isSoldOut ? 'Sold Out' : (isLoggedIn ? 'Buy Tickets' : 'Login to Buy')}</span>
+                {cycle === 'WEEKLY' && (
+                  <Link to="/lotteries" className="hidden sm:flex text-xs font-black text-indigo-600 uppercase tracking-[0.2em] items-center hover:underline">
+                    View All Plans <ChevronRight size={14} className="ml-1" />
                   </Link>
-                </div>
+                )}
               </div>
-            );
-          })}
-        </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {cyclePlans.map((plan) => {
+                  const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
+                  const percentage = Math.round((soldCount / plan.totalTokens) * 100);
+                  const isSoldOut = soldCount >= plan.totalTokens;
+
+                  return (
+                    <div key={plan.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-2xl hover:border-indigo-100 group">
+                      <div className="relative h-48 overflow-hidden">
+                        {plan.image ? (
+                          <img src={plan.image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={plan.name} />
+                        ) : (
+                          <div className="absolute inset-0 flex items-center justify-center text-6xl group-hover:scale-110 transition-transform duration-500 bg-slate-50">
+                            {plan.icon}
+                          </div>
+                        )}
+                        <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest text-white shadow-lg z-10 ${plan.drawCycle === 'WEEKLY' ? 'bg-indigo-600' : 'bg-pink-600'}`}>
+                           {plan.drawCycle}
+                        </div>
+                        
+                        <div className="absolute bottom-4 left-4 px-3 py-1 rounded-full bg-slate-900/80 backdrop-blur-md text-[8px] font-black uppercase tracking-widest text-white border border-white/10 shadow-lg">
+                           Total {plan.totalTokens} Tokens
+                        </div>
+                      </div>
+
+                      <div className="p-8 flex flex-col flex-grow">
+                        <div className="flex justify-between items-start mb-6">
+                          <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{plan.name}</h3>
+                          <div className="text-right">
+                            <span className="block text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Inami Item</span>
+                            <span className="text-sm font-black text-indigo-600">{plan.prizeName || `Rs ${plan.prizePerWinner.toLocaleString()}`}</span>
+                          </div>
+                        </div>
+
+                        {/* PERCENTAGE PROGRESS BAR */}
+                        <div className="mb-8 space-y-2">
+                          <div className="flex justify-between items-end">
+                             <div className="flex items-center space-x-1.5 text-slate-400">
+                                <Users size={12} />
+                                <span className="text-[9px] font-black uppercase tracking-widest">Filling Fast</span>
+                             </div>
+                             <span className={`text-[10px] font-black uppercase tracking-widest ${percentage > 80 ? 'text-red-600' : 'text-indigo-600'}`}>
+                               {percentage}% Sold
+                             </span>
+                          </div>
+                          <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden shadow-inner p-0.5">
+                             <div 
+                              className={`h-full rounded-full transition-all duration-1000 shadow-sm ${percentage > 80 ? 'bg-red-500 shadow-red-200' : 'bg-indigo-600 shadow-indigo-200'}`} 
+                              style={{ width: `${percentage}%` }}
+                             ></div>
+                          </div>
+                          <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest text-center italic">
+                             {soldCount} used / {plan.totalTokens - soldCount} spots left
+                          </p>
+                        </div>
+
+                        <div className="space-y-3 mb-8">
+                          <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
+                            <div className="flex items-center space-x-2">
+                                <Wallet size={14} className="text-slate-300" />
+                                <span className="uppercase tracking-widest">Entry Fee</span>
+                            </div>
+                            <span className="font-black text-slate-900">PKR {plan.tokenPrice}</span>
+                          </div>
+                          
+                          <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
+                            <div className="flex items-center space-x-2">
+                                <Hash size={14} className="text-slate-300" />
+                                <span className="uppercase tracking-widest">Total Numbers</span>
+                            </div>
+                            <span className="text-indigo-600 font-black">{plan.totalTokens.toLocaleString()} Spots</span>
+                          </div>
+
+                          <div className="flex justify-between items-center text-[11px] font-bold text-slate-500">
+                            <div className="flex items-center space-x-2">
+                                <Clock size={14} className="text-slate-300" />
+                                <span className="uppercase tracking-widest">Next Draw</span>
+                            </div>
+                            <span className="text-slate-900 font-black">{plan.drawTime}</span>
+                          </div>
+                        </div>
+
+                        <Link
+                          to={isSoldOut ? "#" : (isLoggedIn ? `/buy/${plan.id}` : "/login")}
+                          className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-2 transition-all shadow-xl shadow-slate-900/10 mt-auto ${
+                            isSoldOut 
+                              ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                              : 'bg-[#1a233a] hover:bg-indigo-600 text-white active:scale-95'
+                          }`}
+                          onClick={(e) => {
+                            if (isSoldOut) e.preventDefault();
+                          }}
+                        >
+                          <Ticket size={16} />
+                          <span>{isSoldOut ? 'Sold Out' : (isLoggedIn ? 'Buy Tickets' : 'Login to Buy')}</span>
+                        </Link>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       {/* NEW: ABOUT US FEATURES SECTION */}

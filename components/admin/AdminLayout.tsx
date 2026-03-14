@@ -1,5 +1,5 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -26,32 +26,63 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout, tokens, transactions } = useUser();
 
-  const pendingDeposits = useMemo(() => 
-    transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'PENDING').length, 
-  [transactions]);
+  const totalTokens = tokens.length;
+  const totalDeposits = useMemo(() => transactions.filter(t => t.type === 'DEPOSIT').length, [transactions]);
+  const totalWithdrawals = useMemo(() => transactions.filter(t => t.type === 'WITHDRAWAL').length, [transactions]);
 
-  const pendingWithdrawals = useMemo(() => 
-    transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'PENDING').length, 
-  [transactions]);
+  const [viewedTokens, setViewedTokens] = useState(() => parseInt(localStorage.getItem('admin_viewed_tokens') || '0'));
+  const [viewedDeposits, setViewedDeposits] = useState(() => parseInt(localStorage.getItem('admin_viewed_deposits') || '0'));
+  const [viewedWithdrawals, setViewedWithdrawals] = useState(() => parseInt(localStorage.getItem('admin_viewed_withdrawals') || '0'));
+
+  useEffect(() => {
+    if (location.pathname === '/admin/sold-tokens' || totalTokens < viewedTokens) {
+      setViewedTokens(totalTokens);
+      localStorage.setItem('admin_viewed_tokens', totalTokens.toString());
+    }
+  }, [totalTokens, location.pathname, viewedTokens]);
+
+  useEffect(() => {
+    if (location.pathname === '/admin/deposits' || totalDeposits < viewedDeposits) {
+      setViewedDeposits(totalDeposits);
+      localStorage.setItem('admin_viewed_deposits', totalDeposits.toString());
+    }
+  }, [totalDeposits, location.pathname, viewedDeposits]);
+
+  useEffect(() => {
+    if (location.pathname === '/admin/withdrawals' || totalWithdrawals < viewedWithdrawals) {
+      setViewedWithdrawals(totalWithdrawals);
+      localStorage.setItem('admin_viewed_withdrawals', totalWithdrawals.toString());
+    }
+  }, [totalWithdrawals, location.pathname, viewedWithdrawals]);
+
+  const newTokens = Math.max(0, totalTokens - viewedTokens);
+  const newDeposits = Math.max(0, totalDeposits - viewedDeposits);
+  const newWithdrawals = Math.max(0, totalWithdrawals - viewedWithdrawals);
 
   const menuItems = [
     { label: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
     { label: 'Lottery Plans', path: '/admin/lottery', icon: <Ticket size={20} /> },
-    { label: 'Sold Tokens', path: '/admin/sold-tokens', icon: <ClipboardList size={20} />, badge: tokens.length > 0 ? tokens.length.toString() : null },
+    { 
+      label: 'Sold Tokens', 
+      path: '/admin/sold-tokens', 
+      icon: <ClipboardList size={20} />, 
+      badge: newTokens > 0 ? newTokens.toString() : null,
+      badgeColor: 'bg-emerald-500'
+    },
     { label: 'All Users', path: '/admin/users', icon: <Users size={20} /> },
     { label: 'Referrals', path: '/admin/referrals', icon: <Share2 size={20} /> },
     { 
       label: 'Deposits', 
       path: '/admin/deposits', 
       icon: <ArrowDownCircle size={20} />, 
-      badge: pendingDeposits > 0 ? pendingDeposits.toString() : null,
+      badge: newDeposits > 0 ? newDeposits.toString() : null,
       badgeColor: 'bg-amber-500'
     },
     { 
       label: 'Withdrawals', 
       path: '/admin/withdrawals', 
       icon: <ArrowUpCircle size={20} />, 
-      badge: pendingWithdrawals > 0 ? pendingWithdrawals.toString() : null,
+      badge: newWithdrawals > 0 ? newWithdrawals.toString() : null,
       badgeColor: 'bg-indigo-500'
     },
     { label: 'Winners', path: '/admin/winners', icon: <Trophy size={20} /> },

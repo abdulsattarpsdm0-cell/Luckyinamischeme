@@ -169,14 +169,16 @@ const App: React.FC = () => {
       if (snap.empty) {
         // Initialize Firestore with static LOTTERY_PLANS if empty
         try {
-          const batch = writeBatch(db);
-          LOTTERY_PLANS.forEach(plan => {
-            const ref = doc(db, 'lotteryPlans', plan.id);
-            batch.set(ref, plan);
-          });
-          const migrationRef = doc(db, 'settings', 'migration');
-          batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
-          await batch.commit();
+          if (user.role === 'ADMIN') {
+            const batch = writeBatch(db);
+            LOTTERY_PLANS.forEach(plan => {
+              const ref = doc(db, 'lotteryPlans', plan.id);
+              batch.set(ref, plan);
+            });
+            const migrationRef = doc(db, 'settings', 'migration');
+            batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
+            await batch.commit();
+          }
         } catch (e) {
           console.error("Error initializing lottery plans:", e);
         }
@@ -185,21 +187,23 @@ const App: React.FC = () => {
         
         // MIGRATION: Ensure static plans exist in Firestore (run once)
         try {
-          const migrationRef = doc(db, 'settings', 'migration');
-          const migrationDoc = await getDoc(migrationRef);
-          if (!migrationDoc.exists() || !migrationDoc.data().lotteryPlansMigrated) {
-            const batch = writeBatch(db);
-            let added = false;
-            LOTTERY_PLANS.forEach(plan => {
-              if (!plans.find(p => p.id === plan.id)) {
-                const ref = doc(db, 'lotteryPlans', plan.id);
-                batch.set(ref, plan);
-                added = true;
-              }
-            });
-            batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
-            await batch.commit();
-            if (added) return; // onSnapshot will trigger again
+          if (user.role === 'ADMIN') {
+            const migrationRef = doc(db, 'settings', 'migration');
+            const migrationDoc = await getDoc(migrationRef);
+            if (!migrationDoc.exists() || !migrationDoc.data().lotteryPlansMigrated) {
+              const batch = writeBatch(db);
+              let added = false;
+              LOTTERY_PLANS.forEach(plan => {
+                if (!plans.find(p => p.id === plan.id)) {
+                  const ref = doc(db, 'lotteryPlans', plan.id);
+                  batch.set(ref, plan);
+                  added = true;
+                }
+              });
+              batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
+              await batch.commit();
+              if (added) return; // onSnapshot will trigger again
+            }
           }
         } catch (e) {
           console.error("Error running lottery plans migration:", e);
@@ -211,19 +215,17 @@ const App: React.FC = () => {
       console.error("Error fetching lottery plans:", err);
     }));
 
-    // Fetch ALL tokens globally so everyone can see sold tokens in real-time
-    unsubs.push(onSnapshot(collection(db, 'tokens'), (snap) => {
-      const allT = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Token));
-      setAllTokens(allT);
-      if (isLoggedIn && user.username) {
-        setTokens(user.role === 'ADMIN' ? allT : allT.filter(t => t.username === user.username));
-      } else {
-        setTokens([]);
-      }
-    }, (err) => console.error("Token Listener Error:", err)));
-
     // Data that depends on login and user identity
     if (isLoggedIn && user.username) {
+      
+      // Fetch ALL tokens globally so everyone can see sold tokens in real-time
+      // Requires rules to allow authenticated users to read tokens
+      unsubs.push(onSnapshot(collection(db, 'tokens'), (snap) => {
+        const allT = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Token));
+        setAllTokens(allT);
+        setTokens(user.role === 'ADMIN' ? allT : allT.filter(t => t.username === user.username));
+      }, (err) => console.error("Token Listener Error:", err)));
+
       
       // Admin View vs User View for Transactions
       // FIX: Remove orderBy from query to avoid composite index requirement

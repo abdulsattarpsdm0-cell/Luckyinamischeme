@@ -83,83 +83,124 @@ const AdminSoldTokens: React.FC = () => {
            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">No tokens sold in this category yet</p>
         </div>
       ) : (
-        <div className={`bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden ${viewMode === 'TABLE' ? 'overflow-x-auto' : ''}`}>
-           {viewMode === 'TABLE' ? (
-             <table className="w-full text-left min-w-[700px]">
-               <thead>
-                 <tr className="bg-slate-50/50 text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                   <th className="py-4 px-8">Ticket #</th>
-                   <th className="py-4 px-6">Plan Name</th>
-                   <th className="py-4 px-6">Date Purchased</th>
-                   <th className="py-4 px-6">Price</th>
-                   <th className="py-4 px-8 text-right">Status</th>
-                 </tr>
-               </thead>
-               <tbody className="divide-y divide-slate-50">
-                 {tokensList.map(token => {
-                   const plan = plansList.find(p => p.id === token.planId);
-                   return (
-                     <tr key={token.id} className="hover:bg-slate-50/30 transition-colors">
-                       <td className="py-4 px-8">
-                         <div className="w-10 h-10 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center font-black text-sm border border-indigo-100">
-                           {token.number}
-                         </div>
-                       </td>
-                       <td className="py-4 px-6">
-                         <div className="flex items-center space-x-2">
-                            <span>{plan?.icon}</span>
-                            <span className="font-black text-slate-900 text-xs uppercase">{plan?.name}</span>
-                         </div>
-                       </td>
-                       <td className="py-4 px-6">
-                         <div className="flex flex-col text-[10px] font-bold text-slate-500 uppercase">
-                            <span>{token.purchaseDate.split(',')[0]}</span>
-                            <span className="text-slate-300 text-[8px]">{token.purchaseDate.split(',')[1]}</span>
-                         </div>
-                       </td>
-                       <td className="py-4 px-6 font-black text-slate-900 text-xs">Rs {plan?.tokenPrice}</td>
-                       <td className="py-4 px-8 text-right">
-                          <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter ${
-                            token.status === 'WINNER' ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-amber-700'
-                          }`}>
-                            {token.status}
-                          </span>
-                       </td>
-                     </tr>
-                   );
-                 })}
-               </tbody>
-             </table>
-           ) : (
-             <div className="p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-                {tokensList.map(token => {
-                  const plan = plansList.find(p => p.id === token.planId);
-                  return (
-                    <div key={token.id} className="bg-slate-50 p-4 rounded-xl text-center border border-slate-200/50 hover:bg-white hover:shadow-md transition-all">
-                       <div className="text-lg mb-1">{plan?.icon}</div>
-                       <div className="text-xl font-black text-slate-900">#{token.number}</div>
-                       <div className="text-[7px] font-black text-indigo-600 uppercase tracking-tighter truncate">{plan?.name}</div>
+        <div className="space-y-8">
+          {plansList.map(plan => {
+            const planTokens = tokensList.filter(t => t.planId === plan.id);
+            if (planTokens.length === 0) return null;
+
+            return (
+              <div key={plan.id} className={`bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden ${viewMode === 'TABLE' ? 'overflow-x-auto' : ''}`}>
+                <div className="bg-slate-50/80 px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+                  <div className="flex items-center space-x-3">
+                    <span className="text-2xl">{plan.icon}</span>
+                    <h3 className="text-lg font-black text-slate-900 uppercase tracking-tight">{plan.name} Tokens</h3>
+                  </div>
+                  <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">
+                    {planTokens.length} Sold
+                  </span>
+                </div>
+
+                {viewMode === 'TABLE' ? (
+                  <div className="w-full">
+                    {/* Desktop Table */}
+                    <div className="hidden md:block overflow-x-auto">
+                      <table className="w-full text-left min-w-[700px]">
+                        <thead>
+                          <tr className="bg-white text-[9px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-50">
+                            <th className="py-4 px-8">Ticket #</th>
+                            <th className="py-4 px-6">User</th>
+                            <th className="py-4 px-6">Date Purchased</th>
+                            <th className="py-4 px-6">Price</th>
+                            <th className="py-4 px-8 text-right">Status</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-50">
+                          {planTokens.map(token => (
+                            <tr key={token.id} className="hover:bg-slate-50/50 transition-colors">
+                              <td className="py-4 px-8">
+                                <div className="w-10 h-10 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center font-black text-sm border border-indigo-100">
+                                  {token.number}
+                                </div>
+                              </td>
+                              <td className="py-4 px-6">
+                                <span className="font-black text-slate-900 text-xs">{token.username || 'Anonymous'}</span>
+                              </td>
+                              <td className="py-4 px-6">
+                                <div className="flex flex-col text-[10px] font-bold text-slate-500 uppercase">
+                                    <span>{token.purchaseDate.split(',')[0]}</span>
+                                    <span className="text-slate-400 text-[8px]">{token.purchaseDate.split(',')[1]}</span>
+                                </div>
+                              </td>
+                              <td className="py-4 px-6 font-black text-slate-900 text-xs">Rs {plan.tokenPrice}</td>
+                              <td className="py-4 px-8 text-right">
+                                  <span className={`px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter ${
+                                    token.status === 'WINNER' ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-amber-700'
+                                  }`}>
+                                    {token.status}
+                                  </span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
                     </div>
-                  );
-                })}
-             </div>
-           )}
+                    {/* Mobile Cards */}
+                    <div className="md:hidden flex flex-col divide-y divide-slate-100">
+                      {planTokens.map(token => (
+                        <div key={token.id} className="p-4 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-10 h-10 bg-indigo-50 text-indigo-700 rounded-lg flex items-center justify-center font-black text-sm border border-indigo-100 flex-shrink-0">
+                                {token.number}
+                              </div>
+                              <div className="min-w-0">
+                                <span className="font-black text-slate-900 text-sm block truncate">{token.username || 'Anonymous'}</span>
+                                <span className="text-[10px] font-bold text-slate-500 uppercase block truncate">{token.purchaseDate.split(',')[0]}</span>
+                              </div>
+                            </div>
+                            <div className="text-right flex-shrink-0">
+                              <span className="font-black text-slate-900 text-sm block">Rs {plan.tokenPrice}</span>
+                              <span className={`inline-block px-2 py-1 rounded-full text-[8px] font-black uppercase tracking-tighter mt-1 ${
+                                token.status === 'WINNER' ? 'bg-emerald-500 text-white' : 'bg-amber-100 text-amber-700'
+                              }`}>
+                                {token.status}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4 bg-white">
+                    {planTokens.map(token => (
+                      <div key={token.id} className="bg-slate-50 p-4 rounded-xl text-center border border-slate-200/50 hover:bg-white hover:shadow-md transition-all relative group">
+                          <div className="text-xl font-black text-slate-900 mb-1">#{token.number}</div>
+                          <div className="text-[8px] font-black text-slate-500 uppercase tracking-tighter truncate">{token.username || 'Anonymous'}</div>
+                          <div className={`absolute -top-2 -right-2 w-4 h-4 rounded-full border-2 border-white ${token.status === 'WINNER' ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
     </div>
   );
 
   return (
-    <div className="max-w-[1400px] mx-auto space-y-10 animate-in fade-in duration-500 pb-20">
+    <div className="max-w-[1400px] mx-auto space-y-6 md:space-y-10 animate-in fade-in duration-500 pb-20">
       
       {/* HEADER & GLOBAL STATS */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6 px-1">
         <div>
-          <h1 className="text-3xl font-black text-slate-900 uppercase tracking-tight">Sold Tokens Monitor</h1>
-          <p className="text-slate-500 font-medium">Categorized view of all active sales across Weekly and Monthly draws.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight">Sold Tokens Monitor</h1>
+          <p className="text-xs md:text-sm text-slate-500 font-medium mt-1">Categorized view of all active sales across Weekly and Monthly draws.</p>
         </div>
         
-        <div className="flex items-center space-x-4 w-full md:w-auto">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-3 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
            <div className="relative flex-grow md:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
               <input 
@@ -170,35 +211,35 @@ const AdminSoldTokens: React.FC = () => {
                 className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-xs font-bold outline-none focus:ring-2 focus:ring-indigo-600/10"
               />
            </div>
-           <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm">
-             <button onClick={() => setViewMode('TABLE')} className={`p-2 rounded-lg transition-all ${viewMode === 'TABLE' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}><List size={18}/></button>
-             <button onClick={() => setViewMode('GRID')} className={`p-2 rounded-lg transition-all ${viewMode === 'GRID' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}><LayoutGrid size={18}/></button>
+           <div className="flex bg-white p-1 rounded-xl border border-slate-200 shadow-sm w-full sm:w-auto">
+             <button onClick={() => setViewMode('TABLE')} className={`flex-1 sm:flex-none p-2 rounded-lg transition-all flex justify-center ${viewMode === 'TABLE' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}><List size={18}/></button>
+             <button onClick={() => setViewMode('GRID')} className={`flex-1 sm:flex-none p-2 rounded-lg transition-all flex justify-center ${viewMode === 'GRID' ? 'bg-indigo-600 text-white' : 'text-slate-400'}`}><LayoutGrid size={18}/></button>
            </div>
         </div>
       </div>
 
       {/* OVERALL SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        <div className="bg-slate-900 p-6 rounded-[2.5rem] text-white flex items-center space-x-5 shadow-2xl relative overflow-hidden">
-           <div className="bg-white/10 w-12 h-12 rounded-2xl flex items-center justify-center"><ClipboardList size={22}/></div>
-           <div>
-              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Total Sales</span>
-              <span className="text-3xl font-black">{tokens.length}</span>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+        <div className="bg-slate-900 p-5 md:p-6 rounded-2xl md:rounded-[2.5rem] text-white flex items-center space-x-4 md:space-x-5 shadow-2xl relative overflow-hidden">
+           <div className="bg-white/10 w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center flex-shrink-0"><ClipboardList size={20}/></div>
+           <div className="min-w-0">
+              <span className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 truncate">Total Sales</span>
+              <span className="text-2xl md:text-3xl font-black truncate">{tokens.length}</span>
            </div>
            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center space-x-5">
-           <div className="bg-indigo-600 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"><Zap size={22}/></div>
-           <div>
-              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Weekly Sales</span>
-              <span className="text-3xl font-black text-slate-900">{weeklyTokens.length}</span>
+        <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center space-x-4 md:space-x-5">
+           <div className="bg-indigo-600 w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg flex-shrink-0"><Zap size={20}/></div>
+           <div className="min-w-0">
+              <span className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 truncate">Weekly Sales</span>
+              <span className="text-2xl md:text-3xl font-black text-slate-900 truncate">{weeklyTokens.length}</span>
            </div>
         </div>
-        <div className="bg-white p-6 rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center space-x-5">
-           <div className="bg-pink-600 w-12 h-12 rounded-2xl flex items-center justify-center text-white shadow-lg"><Calendar size={22}/></div>
-           <div>
-              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Monthly Sales</span>
-              <span className="text-3xl font-black text-slate-900">{monthlyTokens.length}</span>
+        <div className="bg-white p-5 md:p-6 rounded-2xl md:rounded-[2.5rem] border border-slate-100 shadow-sm flex items-center space-x-4 md:space-x-5">
+           <div className="bg-pink-600 w-10 h-10 md:w-12 md:h-12 rounded-xl md:rounded-2xl flex items-center justify-center text-white shadow-lg flex-shrink-0"><Calendar size={20}/></div>
+           <div className="min-w-0">
+              <span className="block text-[9px] md:text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1 truncate">Monthly Sales</span>
+              <span className="text-2xl md:text-3xl font-black text-slate-900 truncate">{monthlyTokens.length}</span>
            </div>
         </div>
       </div>
