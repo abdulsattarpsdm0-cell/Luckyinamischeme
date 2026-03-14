@@ -164,6 +164,53 @@ const App: React.FC = () => {
       console.error("Error fetching draws:", err);
     }));
 
+    // Lottery Plans (Always accessible)
+    unsubs.push(onSnapshot(collection(db, 'lotteryPlans'), async (snap) => {
+      if (snap.empty) {
+        // Initialize Firestore with static LOTTERY_PLANS if empty
+        try {
+          const batch = writeBatch(db);
+          LOTTERY_PLANS.forEach(plan => {
+            const ref = doc(db, 'lotteryPlans', plan.id);
+            batch.set(ref, plan);
+          });
+          const migrationRef = doc(db, 'settings', 'migration');
+          batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
+          await batch.commit();
+        } catch (e) {
+          console.error("Error initializing lottery plans:", e);
+        }
+      } else {
+        const plans = snap.docs.map(d => ({ ...d.data(), id: d.id } as LotteryPlan));
+        
+        // MIGRATION: Ensure static plans exist in Firestore (run once)
+        try {
+          const migrationRef = doc(db, 'settings', 'migration');
+          const migrationDoc = await getDoc(migrationRef);
+          if (!migrationDoc.exists() || !migrationDoc.data().lotteryPlansMigrated) {
+            const batch = writeBatch(db);
+            let added = false;
+            LOTTERY_PLANS.forEach(plan => {
+              if (!plans.find(p => p.id === plan.id)) {
+                const ref = doc(db, 'lotteryPlans', plan.id);
+                batch.set(ref, plan);
+                added = true;
+              }
+            });
+            batch.set(migrationRef, { lotteryPlansMigrated: true }, { merge: true });
+            await batch.commit();
+            if (added) return; // onSnapshot will trigger again
+          }
+        } catch (e) {
+          console.error("Error running lottery plans migration:", e);
+        }
+
+        setLotteryPlans(plans);
+      }
+    }, (err) => {
+      console.error("Error fetching lottery plans:", err);
+    }));
+
     // Fetch ALL tokens globally so everyone can see sold tokens in real-time
     unsubs.push(onSnapshot(collection(db, 'tokens'), (snap) => {
       const allT = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Token));
