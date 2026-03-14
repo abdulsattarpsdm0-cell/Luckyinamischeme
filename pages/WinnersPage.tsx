@@ -5,13 +5,25 @@ import { useUser } from '../context/UserContext.ts';
 const WinnersPage: React.FC = () => {
   const { lotteryPlans, draws } = useUser();
   const [activeTab, setActiveTab] = useState<string>('');
+  const [latestDrawId, setLatestDrawId] = useState<string>('');
 
-  // Initialize first tab when plans are loaded
+  // Auto-switch to the most recent draw's plan when a new draw comes in
   useEffect(() => {
-    if (lotteryPlans.length > 0 && !activeTab) {
+    if (draws.length > 0) {
+      const mostRecentDraw = draws[0];
+      if (mostRecentDraw.id !== latestDrawId) {
+        setLatestDrawId(mostRecentDraw.id);
+        setActiveTab(mostRecentDraw.planId);
+      }
+    }
+  }, [draws, latestDrawId]);
+
+  // Initialize first tab when plans are loaded (fallback)
+  useEffect(() => {
+    if (lotteryPlans.length > 0 && !activeTab && draws.length === 0) {
       setActiveTab(lotteryPlans[0].id);
     }
-  }, [lotteryPlans, activeTab]);
+  }, [lotteryPlans, activeTab, draws.length]);
 
   const selectedPlan = useMemo(() => lotteryPlans.find(p => p.id === activeTab), [lotteryPlans, activeTab]);
   

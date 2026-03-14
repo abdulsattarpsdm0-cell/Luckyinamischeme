@@ -19,9 +19,13 @@ const MyTokensPage: React.FC = () => {
     lotteryPlans.find(p => p.id === activePlanId), 
   [lotteryPlans, activePlanId]);
 
+  const activeTokens = useMemo(() => 
+    tokens.filter(t => t.status === 'WAITING'),
+  [tokens]);
+
   const filteredTokens = useMemo(() => 
-    tokens.filter(t => t.planId === activePlanId),
-  [tokens, activePlanId]);
+    activeTokens.filter(t => t.planId === activePlanId),
+  [activeTokens, activePlanId]);
 
   const totalWinnings = useMemo(() => 
     tokens.reduce((sum, t) => sum + (t.prizeAmount || 0), 0),
@@ -36,7 +40,7 @@ const MyTokensPage: React.FC = () => {
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-1.5 px-3 py-1 bg-indigo-50 text-indigo-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-indigo-100">
               <Ticket size={12} />
-              <span>Total: {tokens.length}</span>
+              <span>Total: {activeTokens.length}</span>
             </div>
             <div className="flex items-center space-x-1.5 px-3 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-100">
               <Trophy size={12} />
@@ -69,9 +73,9 @@ const MyTokensPage: React.FC = () => {
             >
               <span className="text-lg">{plan.icon}</span>
               <span>{plan.name}</span>
-              {tokens.filter(t => t.planId === plan.id).length > 0 && (
+              {activeTokens.filter(t => t.planId === plan.id).length > 0 && (
                 <span className={`w-5 h-5 rounded-full flex items-center justify-center text-[8px] ${activePlanId === plan.id ? 'bg-indigo-600 text-white' : 'bg-slate-200 text-slate-500'}`}>
-                   {tokens.filter(t => t.planId === plan.id).length}
+                   {activeTokens.filter(t => t.planId === plan.id).length}
                 </span>
               )}
             </button>
