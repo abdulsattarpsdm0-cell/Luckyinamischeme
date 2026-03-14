@@ -5,7 +5,7 @@ import { useUser } from '../../context/UserContext.ts';
 import { PlanType, LotteryPlan, DrawCycle } from '../../types.ts';
 
 const AdminLottery: React.FC = () => {
-  const { lotteryPlans, addLottery, deleteLottery, updateLottery, tokens: allTokens } = useUser();
+  const { lotteryPlans, addLottery, deleteLottery, updateLottery, allTokens } = useUser();
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);

@@ -31,7 +31,7 @@ import {
 } from 'lucide-react';
 
 const HomePage: React.FC = () => {
-  const { user, tokens, lotteryPlans, isLoggedIn } = useUser();
+  const { user, tokens, allTokens, lotteryPlans, isLoggedIn } = useUser();
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // ONLY SHOW ACTIVE PLANS ON USER FRONTEND
@@ -213,7 +213,7 @@ const HomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {activePlans.map((plan) => {
-            const soldCount = tokens.filter(t => t.planId === plan.id).length;
+            const soldCount = allTokens.filter(t => t.planId === plan.id).length;
             const percentage = Math.round((soldCount / plan.totalTokens) * 100);
 
             return (

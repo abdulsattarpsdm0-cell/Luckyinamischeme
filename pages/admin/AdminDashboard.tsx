@@ -4,7 +4,7 @@ import { Users, CreditCard, ArrowDownCircle, ArrowUpCircle, Ticket, BarChart3, C
 import { useUser } from '../../context/UserContext.ts';
 
 const AdminDashboard: React.FC = () => {
-  const { users, transactions, tokens } = useUser();
+  const { users, transactions, allTokens: tokens } = useUser();
   const [activeNow, setActiveNow] = useState(0);
   
   useEffect(() => {

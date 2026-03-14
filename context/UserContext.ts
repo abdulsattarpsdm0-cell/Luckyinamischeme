@@ -16,6 +16,7 @@ interface UserContextType {
   users: User[]; 
   isLoggedIn: boolean;
   tokens: Token[];
+  allTokens: Token[];
   transactions: Transaction[];
   lotteryPlans: LotteryPlan[];
   paymentMethods: PaymentMethod[];

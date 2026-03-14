@@ -4,7 +4,7 @@ import { Trophy, Star, Target, ShieldCheck, History, AlertCircle, XCircle, Check
 import { useUser } from '../../context/UserContext.ts';
 
 const AdminWinner: React.FC = () => {
-  const { lotteryPlans, tokens: allTokens } = useUser();
+  const { lotteryPlans, allTokens } = useUser();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [drawMethod, setDrawMethod] = useState<'MANUAL' | 'RANDOM'>('MANUAL');
   const [winnersInputs, setWinnersInputs] = useState<string[]>(Array(10).fill(''));

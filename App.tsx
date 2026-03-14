@@ -100,6 +100,7 @@ const App: React.FC = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [tokens, setTokens] = useState<Token[]>([]);
+  const [allTokens, setAllTokens] = useState<Token[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [lotteryPlans, setLotteryPlans] = useState<LotteryPlan[]>(LOTTERY_PLANS);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
@@ -152,6 +153,17 @@ const App: React.FC = () => {
       setPaymentMethods(snap.docs.map(d => d.data() as PaymentMethod));
     }, () => {}));
 
+    // Fetch ALL tokens globally so everyone can see sold tokens in real-time
+    unsubs.push(onSnapshot(collection(db, 'tokens'), (snap) => {
+      const allT = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Token));
+      setAllTokens(allT);
+      if (isLoggedIn && user.username) {
+        setTokens(user.role === 'ADMIN' ? allT : allT.filter(t => t.username === user.username));
+      } else {
+        setTokens([]);
+      }
+    }, (err) => console.error("Token Listener Error:", err)));
+
     // Data that depends on login and user identity
     if (isLoggedIn && user.username) {
       
@@ -167,15 +179,6 @@ const App: React.FC = () => {
         txs.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setTransactions(txs);
       }, (err) => console.error("Tx Listener Error:", err)));
-
-      // Admin View vs User View for Tokens
-      const tokenQuery = user.role === 'ADMIN'
-        ? collection(db, 'tokens')
-        : query(collection(db, 'tokens'), where('username', '==', user.username));
-
-      unsubs.push(onSnapshot(tokenQuery, (snap) => {
-        setTokens(snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Token)));
-      }, (err) => console.error("Token Listener Error:", err)));
 
       // Admin-only User List
       if (user.role === 'ADMIN') {
@@ -288,7 +291,7 @@ const App: React.FC = () => {
 
   return (
     <UserContext.Provider value={{ 
-      user, users, isLoggedIn, tokens, transactions, lotteryPlans, paymentMethods, whatsappContact,
+      user, users, isLoggedIn, tokens, allTokens, transactions, lotteryPlans, paymentMethods, whatsappContact,
       login, signUp, logout, deleteAccount, addTokens, updateBalance, updateUserBalance, addTransaction, 
       updateTransactionStatus, addLottery, updateLottery, deleteLottery, addPaymentMethod, updatePaymentMethod, 
       deletePaymentMethod, updateWhatsappContact

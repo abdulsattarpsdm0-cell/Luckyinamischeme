@@ -8,7 +8,7 @@ import { Token } from '../types';
 const TokenPurchasePage: React.FC = () => {
   const { planId } = useParams<{ planId: string }>();
   const navigate = useNavigate();
-  const { user, updateBalance, addTokens, lotteryPlans, tokens } = useUser();
+  const { user, updateBalance, addTokens, lotteryPlans, allTokens } = useUser();
   
   const plan = useMemo(() => lotteryPlans.find(p => p.id === planId), [lotteryPlans, planId]);
   const [selectedTokens, setSelectedTokens] = useState<number[]>([]);
@@ -16,10 +16,10 @@ const TokenPurchasePage: React.FC = () => {
 
   // REAL-TIME SOLD TOKENS: Filter from global tokens list
   const soldTokens = useMemo(() => {
-    return tokens
+    return allTokens
       .filter(t => t.planId === planId)
       .map(t => t.number);
-  }, [tokens, planId]);
+  }, [allTokens, planId]);
 
   if (!plan) {
     return (

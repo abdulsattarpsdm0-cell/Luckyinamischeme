@@ -5,7 +5,7 @@ import { useUser } from '../context/UserContext.ts';
 import { Trophy, Ticket, CalendarDays, Clock, ChevronRight, Zap, Hash, Users } from 'lucide-react';
 
 const LotteriesPage: React.FC = () => {
-  const { lotteryPlans, tokens } = useUser();
+  const { lotteryPlans, allTokens } = useUser();
   const [activeCycle, setActiveCycle] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
 
   // ONLY SHOW ACTIVE PLANS ON USER FRONTEND
@@ -48,7 +48,7 @@ const LotteriesPage: React.FC = () => {
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {filteredPlans.map((plan) => {
-          const soldCount = tokens.filter(t => t.planId === plan.id).length;
+          const soldCount = allTokens.filter(t => t.planId === plan.id).length;
           const percentage = Math.round((soldCount / plan.totalTokens) * 100);
 
           return (

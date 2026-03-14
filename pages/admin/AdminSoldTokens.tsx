@@ -17,7 +17,7 @@ import { useUser } from '../../context/UserContext';
 import { LotteryPlan, Token } from '../../types';
 
 const AdminSoldTokens: React.FC = () => {
-  const { tokens, lotteryPlans } = useUser();
+  const { allTokens: tokens, lotteryPlans } = useUser();
   const [search, setSearch] = useState('');
   const [viewMode, setViewMode] = useState<'TABLE' | 'GRID'>('TABLE');
 
