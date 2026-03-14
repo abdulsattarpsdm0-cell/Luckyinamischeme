@@ -18,7 +18,7 @@ const TokenPurchasePage: React.FC = () => {
   const soldTokens = useMemo(() => {
     return allTokens
       .filter(t => t.planId === planId && t.status === 'WAITING')
-      .map(t => t.number);
+      .map(t => Number(t.number));
   }, [allTokens, planId]);
 
   if (!plan) {

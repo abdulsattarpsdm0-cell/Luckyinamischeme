@@ -15,9 +15,9 @@ const WinnersPage: React.FC = () => {
 
   const selectedPlan = useMemo(() => lotteryPlans.find(p => p.id === activeTab), [lotteryPlans, activeTab]);
   
-  // Get the latest draw for the selected plan
-  const latestDraw = useMemo(() => {
-    return draws.find(d => d.planId === activeTab);
+  // Get all draws for the selected plan
+  const planDraws = useMemo(() => {
+    return draws.filter(d => d.planId === activeTab);
   }, [draws, activeTab]);
 
   if (lotteryPlans.length === 0) {
@@ -56,7 +56,7 @@ const WinnersPage: React.FC = () => {
       </div>
 
       {/* Waiting for Draw Section */}
-      {!latestDraw && selectedPlan && (
+      {planDraws.length === 0 && selectedPlan && (
         <div className="bg-slate-900 rounded-[3rem] p-12 text-center text-white relative overflow-hidden mb-12 shadow-2xl">
            <div className="absolute top-0 left-0 w-full h-full opacity-5 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
            <div className="relative z-10 max-w-2xl mx-auto">
@@ -79,55 +79,61 @@ const WinnersPage: React.FC = () => {
       )}
 
       {/* Final Results Display */}
-      {latestDraw && selectedPlan && (
-        <div className="space-y-10">
-          <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-6 gap-4">
-            <div className="flex items-center space-x-4">
-              <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shadow-inner">
-                 <Trophy size={24} />
-              </div>
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 uppercase">{selectedPlan.name} Winners List</h2>
-                <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mt-1">Official Selection Result</p>
-              </div>
-            </div>
-            <div className="text-right">
-              <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Draw Date</span>
-              <span className="text-sm font-black text-slate-900">{new Date(latestDraw.date).toLocaleDateString()} {new Date(latestDraw.date).toLocaleTimeString()}</span>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
-            {latestDraw.winningNumbers.map((num, i) => {
-              const winnerInfo = latestDraw.winners.find(w => w.number === num);
-              return (
-                <div key={i} className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm text-center transform hover:-translate-y-2 transition-all hover:shadow-2xl relative overflow-hidden">
-                  {winnerInfo && (
-                    <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
-                  )}
-                  <div className="relative mb-6">
-                     <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center mx-auto transition-all shadow-inner ${winnerInfo ? 'bg-amber-100 text-amber-600 group-hover:scale-110 group-hover:bg-amber-200' : 'bg-slate-50 text-slate-400'}`}>
-                       <Star fill="currentColor" size={32} />
-                     </div>
-                     <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xs shadow-lg">#{i+1}</div>
+      {planDraws.length > 0 && selectedPlan && (
+        <div className="space-y-16">
+          {planDraws.map((draw, drawIndex) => (
+            <div key={draw.id} className="space-y-10">
+              <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-100 pb-6 gap-4">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-amber-100 text-amber-600 rounded-2xl flex items-center justify-center shadow-inner">
+                     <Trophy size={24} />
                   </div>
-                  <div className="text-[10px] font-black text-emerald-600 mb-1 uppercase tracking-[0.2em]">Winning Number</div>
-                  <div className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">#{num}</div>
-                  
-                  {winnerInfo ? (
-                    <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm flex flex-col gap-1">
-                      <span>Winner: {winnerInfo.username || 'Anonymous'}</span>
-                      <span className="text-emerald-900">Prize: Rs {winnerInfo.prize.toLocaleString()}</span>
-                    </div>
-                  ) : (
-                    <div className="bg-slate-50 border border-slate-100 text-slate-500 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">
-                      Unsold Ticket
-                    </div>
-                  )}
+                  <div>
+                    <h2 className="text-2xl font-black text-slate-900 uppercase">{selectedPlan.name} Winners List</h2>
+                    <p className="text-xs font-black text-indigo-600 uppercase tracking-[0.2em] mt-1">
+                      {drawIndex === 0 ? 'Latest Draw Result' : 'Past Draw Result'}
+                    </p>
+                  </div>
                 </div>
-              );
-            })}
-          </div>
+                <div className="text-right">
+                  <span className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Draw Date</span>
+                  <span className="text-sm font-black text-slate-900">{new Date(draw.date).toLocaleDateString()} {new Date(draw.date).toLocaleTimeString()}</span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8">
+                {draw.winningNumbers.map((num, i) => {
+                  const winnerInfo = draw.winners.find(w => Number(w.number) === Number(num));
+                  return (
+                    <div key={i} className="group bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm text-center transform hover:-translate-y-2 transition-all hover:shadow-2xl relative overflow-hidden">
+                      {winnerInfo && (
+                        <div className="absolute top-0 left-0 w-full h-1 bg-emerald-500"></div>
+                      )}
+                      <div className="relative mb-6">
+                         <div className={`w-16 h-16 rounded-[1.5rem] flex items-center justify-center mx-auto transition-all shadow-inner ${winnerInfo ? 'bg-amber-100 text-amber-600 group-hover:scale-110 group-hover:bg-amber-200' : 'bg-slate-50 text-slate-400'}`}>
+                           <Star fill="currentColor" size={32} />
+                         </div>
+                         <div className="absolute -top-2 -right-2 w-8 h-8 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-black text-xs shadow-lg">#{i+1}</div>
+                      </div>
+                      <div className="text-[10px] font-black text-emerald-600 mb-1 uppercase tracking-[0.2em]">Winning Number</div>
+                      <div className="text-4xl font-black text-slate-900 mb-4 tracking-tighter">#{num}</div>
+                      
+                      {winnerInfo ? (
+                        <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm flex flex-col gap-1">
+                          <span>Winner: {winnerInfo.username || 'Anonymous'}</span>
+                          <span className="text-emerald-900">Prize: Rs {winnerInfo.prize.toLocaleString()}</span>
+                        </div>
+                      ) : (
+                        <div className="bg-slate-50 border border-slate-100 text-slate-500 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">
+                          Unsold Ticket
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
       )}
       

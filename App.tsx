@@ -160,7 +160,9 @@ const App: React.FC = () => {
       const allDraws = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Draw));
       allDraws.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       setDraws(allDraws);
-    }, () => {}));
+    }, (err) => {
+      console.error("Error fetching draws:", err);
+    }));
 
     // Fetch ALL tokens globally so everyone can see sold tokens in real-time
     unsubs.push(onSnapshot(collection(db, 'tokens'), (snap) => {
@@ -325,7 +327,7 @@ const App: React.FC = () => {
       const batch = writeBatch(db);
       chunk.forEach(t => {
         const ref = doc(db, 'tokens', t.id);
-        if (winningNumbers.includes(t.number)) {
+        if (winningNumbers.includes(Number(t.number))) {
           batch.update(ref, { status: 'WINNER', prizeAmount: plan.prizePerWinner });
           // Also update the winner's wallet balance
           if (t.username) {
@@ -352,9 +354,9 @@ const App: React.FC = () => {
       planName: plan.name,
       date: new Date().toISOString(),
       winningNumbers,
-      winners: waitingTokens.filter(t => winningNumbers.includes(t.number)).map(t => ({
+      winners: waitingTokens.filter(t => winningNumbers.includes(Number(t.number))).map(t => ({
         username: t.username,
-        number: t.number,
+        number: Number(t.number),
         prize: plan.prizePerWinner
       }))
     };
