@@ -213,8 +213,9 @@ const HomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {activePlans.map((plan) => {
-            const soldCount = allTokens.filter(t => t.planId === plan.id).length;
+            const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
             const percentage = Math.round((soldCount / plan.totalTokens) * 100);
+            const isSoldOut = soldCount >= plan.totalTokens;
 
             return (
               <div key={plan.id} className="bg-white rounded-[2.5rem] border border-slate-200 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-2xl hover:border-indigo-100 group">
@@ -293,11 +294,18 @@ const HomePage: React.FC = () => {
                   </div>
 
                   <Link
-                    to={isLoggedIn ? `/buy/${plan.id}` : "/login"}
-                    className="w-full py-4 bg-[#1a233a] hover:bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-2 transition-all shadow-xl shadow-slate-900/10 active:scale-95 mt-auto"
+                    to={isSoldOut ? "#" : (isLoggedIn ? `/buy/${plan.id}` : "/login")}
+                    className={`w-full py-4 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-2 transition-all shadow-xl shadow-slate-900/10 mt-auto ${
+                      isSoldOut 
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                        : 'bg-[#1a233a] hover:bg-indigo-600 text-white active:scale-95'
+                    }`}
+                    onClick={(e) => {
+                      if (isSoldOut) e.preventDefault();
+                    }}
                   >
                     <Ticket size={16} />
-                    <span>{isLoggedIn ? 'Buy Tickets' : 'Login to Buy'}</span>
+                    <span>{isSoldOut ? 'Sold Out' : (isLoggedIn ? 'Buy Tickets' : 'Login to Buy')}</span>
                   </Link>
                 </div>
               </div>

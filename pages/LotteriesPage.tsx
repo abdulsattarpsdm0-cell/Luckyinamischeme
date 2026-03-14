@@ -48,8 +48,9 @@ const LotteriesPage: React.FC = () => {
       {/* Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-10">
         {filteredPlans.map((plan) => {
-          const soldCount = allTokens.filter(t => t.planId === plan.id).length;
+          const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
           const percentage = Math.round((soldCount / plan.totalTokens) * 100);
+          const isSoldOut = soldCount >= plan.totalTokens;
 
           return (
             <div key={plan.id} className="bg-white rounded-[2.5rem] md:rounded-[3.5rem] border border-slate-100 shadow-sm overflow-hidden flex flex-col transition-all hover:shadow-xl group relative">
@@ -151,12 +152,19 @@ const LotteriesPage: React.FC = () => {
                 {/* Action Button */}
                 <div className="mt-auto">
                   <Link
-                    to={`/buy/${plan.id}`}
-                    className="w-full py-4 md:py-5 bg-[#1a233a] hover:bg-indigo-600 text-white rounded-2xl md:rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-3 transition-all active:scale-95 shadow-lg"
+                    to={isSoldOut ? "#" : `/buy/${plan.id}`}
+                    className={`w-full py-4 md:py-5 rounded-2xl md:rounded-[2rem] font-black uppercase tracking-[0.2em] text-[10px] flex items-center justify-center space-x-3 transition-all shadow-lg ${
+                      isSoldOut 
+                        ? 'bg-slate-200 text-slate-400 cursor-not-allowed' 
+                        : 'bg-[#1a233a] hover:bg-indigo-600 text-white active:scale-95'
+                    }`}
+                    onClick={(e) => {
+                      if (isSoldOut) e.preventDefault();
+                    }}
                   >
                     <Ticket size={18} />
-                    <span>Open Lottery</span>
-                    <ChevronRight size={16} />
+                    <span>{isSoldOut ? 'Sold Out' : 'Open Lottery'}</span>
+                    {!isSoldOut && <ChevronRight size={16} />}
                   </Link>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 
 import { createContext, useContext } from 'react';
-import { User, Token, Transaction, LotteryPlan } from '../types';
+import { User, Token, Transaction, LotteryPlan, Draw } from '../types';
 
 export interface PaymentMethod {
   id: string;
@@ -20,6 +20,7 @@ interface UserContextType {
   transactions: Transaction[];
   lotteryPlans: LotteryPlan[];
   paymentMethods: PaymentMethod[];
+  draws: Draw[];
   whatsappContact: string;
   login: (email?: string, password?: string) => Promise<boolean>;
   signUp: (userData: any) => Promise<boolean>;
@@ -37,6 +38,7 @@ interface UserContextType {
   updatePaymentMethod: (method: PaymentMethod) => Promise<void>;
   deletePaymentMethod: (id: string) => Promise<void>;
   updateWhatsappContact: (link: string) => Promise<void>;
+  announceWinner: (planId: string, winningNumbers: number[]) => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | undefined>(undefined);

@@ -55,6 +55,19 @@ export interface Transaction {
   txId?: string;          
 }
 
+export interface Draw {
+  id: string;
+  planId: string;
+  planName: string;
+  date: string;
+  winningNumbers: number[];
+  winners: {
+    username?: string;
+    number: number;
+    prize: number;
+  }[];
+}
+
 export interface User {
   id: string;
   firstName: string;

@@ -30,7 +30,7 @@ import AdminReferrals from './pages/admin/AdminReferrals.tsx';
 import AdminSettings from './pages/admin/AdminSettings.tsx';
 
 import { LOTTERY_PLANS } from './constants.ts';
-import { Token, Transaction, LotteryPlan, User } from './types.ts';
+import { Token, Transaction, LotteryPlan, User, Draw } from './types.ts';
 import { auth, db } from './firebase.ts';
 import { 
   createUserWithEmailAndPassword, 
@@ -50,7 +50,8 @@ import {
   query, 
   orderBy,
   where,
-  deleteDoc
+  deleteDoc,
+  writeBatch
 } from 'firebase/firestore';
 
 const AppContent: React.FC = () => {
@@ -104,6 +105,7 @@ const App: React.FC = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [lotteryPlans, setLotteryPlans] = useState<LotteryPlan[]>(LOTTERY_PLANS);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [draws, setDraws] = useState<Draw[]>([]);
   const [whatsappContact, setWhatsappContact] = useState('923177730425');
   const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);
 
@@ -151,6 +153,13 @@ const App: React.FC = () => {
     // Payment Methods (Always accessible)
     unsubs.push(onSnapshot(collection(db, 'paymentMethods'), (snap) => {
       setPaymentMethods(snap.docs.map(d => d.data() as PaymentMethod));
+    }, () => {}));
+
+    // Draws (Always accessible)
+    unsubs.push(onSnapshot(collection(db, 'draws'), (snap) => {
+      const allDraws = snap.docs.map(d => ({ ...d.data(), id: d.id } as any as Draw));
+      allDraws.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setDraws(allDraws);
     }, () => {}));
 
     // Fetch ALL tokens globally so everyone can see sold tokens in real-time
@@ -228,8 +237,22 @@ const App: React.FC = () => {
   };
 
   const addTokens = async (newTokens: Token[]) => {
+    const batch = writeBatch(db);
     for (const t of newTokens) {
-      await setDoc(doc(db, 'tokens', Math.random().toString(36).substr(2, 9)), { ...t, username: user.username });
+      const ref = doc(db, 'tokens', Math.random().toString(36).substr(2, 9));
+      batch.set(ref, { ...t, username: user.username });
+    }
+    await batch.commit();
+
+    if (newTokens.length > 0) {
+      const planId = newTokens[0].planId;
+      const plan = lotteryPlans.find(p => p.id === planId);
+      if (plan) {
+        const currentSoldCount = allTokens.filter(t => t.planId === planId && t.status === 'WAITING').length;
+        if (currentSoldCount + newTokens.length >= plan.totalTokens) {
+          await updateDoc(doc(db, 'lotteryPlans', planId), { isActive: false });
+        }
+      }
     }
   };
 
@@ -289,12 +312,64 @@ const App: React.FC = () => {
     await updateDoc(doc(db, 'settings', 'global'), { whatsapp: link });
   };
 
+  const announceWinner = async (planId: string, winningNumbers: number[]) => {
+    const plan = lotteryPlans.find(p => p.id === planId);
+    if (!plan) throw new Error("Plan not found");
+
+    const waitingTokens = allTokens.filter(t => t.planId === planId && t.status === 'WAITING');
+    
+    // Chunk into 200s to avoid exceeding 500 writes per batch
+    const chunkSize = 200;
+    for (let i = 0; i < waitingTokens.length; i += chunkSize) {
+      const chunk = waitingTokens.slice(i, i + chunkSize);
+      const batch = writeBatch(db);
+      chunk.forEach(t => {
+        const ref = doc(db, 'tokens', t.id);
+        if (winningNumbers.includes(t.number)) {
+          batch.update(ref, { status: 'WINNER', prizeAmount: plan.prizePerWinner });
+          // Also update the winner's wallet balance
+          if (t.username) {
+            const winnerUser = users.find(u => u.username === t.username);
+            if (winnerUser) {
+              const userRef = doc(db, 'users', winnerUser.id);
+              batch.update(userRef, { 
+                walletBalance: increment(plan.prizePerWinner),
+                totalWinnings: increment(plan.prizePerWinner)
+              });
+            }
+          }
+        } else {
+          batch.update(ref, { status: 'NOT_SELECTED' });
+        }
+      });
+      await batch.commit();
+    }
+
+    // Record the draw
+    const drawDoc = {
+      id: Math.random().toString(36).substr(2, 9),
+      planId,
+      planName: plan.name,
+      date: new Date().toISOString(),
+      winningNumbers,
+      winners: waitingTokens.filter(t => winningNumbers.includes(t.number)).map(t => ({
+        username: t.username,
+        number: t.number,
+        prize: plan.prizePerWinner
+      }))
+    };
+    await setDoc(doc(db, 'draws', drawDoc.id), drawDoc);
+
+    // Re-enable the lottery plan so it's available for the next round
+    await updateDoc(doc(db, 'lotteryPlans', planId), { isActive: true });
+  };
+
   return (
     <UserContext.Provider value={{ 
-      user, users, isLoggedIn, tokens, allTokens, transactions, lotteryPlans, paymentMethods, whatsappContact,
+      user, users, isLoggedIn, tokens, allTokens, transactions, lotteryPlans, paymentMethods, draws, whatsappContact,
       login, signUp, logout, deleteAccount, addTokens, updateBalance, updateUserBalance, addTransaction, 
       updateTransactionStatus, addLottery, updateLottery, deleteLottery, addPaymentMethod, updatePaymentMethod, 
-      deletePaymentMethod, updateWhatsappContact
+      deletePaymentMethod, updateWhatsappContact, announceWinner
     }}>
       <Router>
         <AppContent />

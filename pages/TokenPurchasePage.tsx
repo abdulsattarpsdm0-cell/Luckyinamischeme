@@ -17,7 +17,7 @@ const TokenPurchasePage: React.FC = () => {
   // REAL-TIME SOLD TOKENS: Filter from global tokens list
   const soldTokens = useMemo(() => {
     return allTokens
-      .filter(t => t.planId === planId)
+      .filter(t => t.planId === planId && t.status === 'WAITING')
       .map(t => t.number);
   }, [allTokens, planId]);
 

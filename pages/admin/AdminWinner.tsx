@@ -1,21 +1,68 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Star, Target, ShieldCheck, History, AlertCircle, XCircle, CheckCircle2, Play, Sparkles, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext.ts';
 
 const AdminWinner: React.FC = () => {
-  const { lotteryPlans, allTokens } = useUser();
+  const { lotteryPlans, allTokens, announceWinner } = useUser();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [drawMethod, setDrawMethod] = useState<'MANUAL' | 'RANDOM'>('MANUAL');
   const [winnersInputs, setWinnersInputs] = useState<string[]>(Array(10).fill(''));
-
-  const handleDraw = () => {
-    alert(`Draw for ${activeCategory} conducted successfully!`);
-    setActiveCategory(null);
-    setWinnersInputs(Array(10).fill(''));
-  };
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const selectedPlan = lotteryPlans.find(p => p.id === activeCategory);
+
+  // Auto-generate random numbers if method is RANDOM
+  useEffect(() => {
+    if (drawMethod === 'RANDOM' && selectedPlan) {
+      const randomNumbers: string[] = [];
+      const totalWinners = Math.min(selectedPlan.totalWinners, 10);
+      while (randomNumbers.length < totalWinners) {
+        const num = Math.floor(Math.random() * selectedPlan.totalTokens) + 1;
+        if (!randomNumbers.includes(num.toString())) {
+          randomNumbers.push(num.toString());
+        }
+      }
+      setWinnersInputs(randomNumbers);
+    } else {
+      setWinnersInputs(Array(10).fill(''));
+    }
+  }, [drawMethod, selectedPlan]);
+
+  const handleDraw = async () => {
+    if (!selectedPlan) return;
+    
+    const totalWinners = Math.min(selectedPlan.totalWinners, 10);
+    const winningNumbers = winnersInputs
+      .slice(0, totalWinners)
+      .map(n => parseInt(n))
+      .filter(n => !isNaN(n) && n > 0 && n <= selectedPlan.totalTokens);
+
+    if (winningNumbers.length !== totalWinners) {
+      alert(`Please enter exactly ${totalWinners} valid winning numbers between 1 and ${selectedPlan.totalTokens}.`);
+      return;
+    }
+
+    if (new Set(winningNumbers).size !== winningNumbers.length) {
+      alert("Winning numbers must be unique.");
+      return;
+    }
+
+    if (window.confirm(`Are you sure you want to announce these winners for ${selectedPlan.name}? This action cannot be undone.`)) {
+      try {
+        setIsSubmitting(true);
+        await announceWinner(selectedPlan.id, winningNumbers);
+        alert(`Draw for ${selectedPlan.name} conducted successfully!`);
+        setActiveCategory(null);
+        setWinnersInputs(Array(10).fill(''));
+      } catch (error) {
+        console.error("Error announcing winner:", error);
+        alert("Failed to announce winner. Please try again.");
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
 
   return (
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
@@ -33,7 +80,7 @@ const AdminWinner: React.FC = () => {
       {/* Adaptive Category Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
         {lotteryPlans.map((plan) => {
-          const soldCount = allTokens.filter(t => t.planId === plan.id).length;
+          const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
           return (
             <button 
               key={plan.id}
@@ -113,13 +160,13 @@ const AdminWinner: React.FC = () => {
                             <input 
                               type="text" 
                               placeholder="---"
-                              value={drawMethod === 'RANDOM' ? Math.floor(Math.random() * selectedPlan.totalTokens) + 1 : winnersInputs[i]}
+                              value={winnersInputs[i]}
                               onChange={(e) => {
                                 const newVal = [...winnersInputs];
                                 newVal[i] = e.target.value;
                                 setWinnersInputs(newVal);
                               }}
-                              readOnly={drawMethod === 'RANDOM'}
+                              readOnly={drawMethod === 'RANDOM' || isSubmitting}
                               className="w-full h-12 md:h-16 bg-slate-50 border border-slate-100 rounded-xl outline-none focus:border-indigo-600 text-center font-black text-lg"
                             />
                          </div>
@@ -134,10 +181,11 @@ const AdminWinner: React.FC = () => {
 
                  <button 
                   onClick={handleDraw}
-                  className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl shadow-xl uppercase tracking-widest text-xs active:scale-95 flex items-center justify-center space-x-3"
+                  disabled={isSubmitting}
+                  className={`w-full py-5 text-white font-black rounded-2xl shadow-xl uppercase tracking-widest text-xs flex items-center justify-center space-x-3 ${isSubmitting ? 'bg-slate-400 cursor-not-allowed' : 'bg-slate-900 active:scale-95'}`}
                  >
                     <Trophy size={18} />
-                    <span>Announce Winners Now</span>
+                    <span>{isSubmitting ? 'Announcing...' : 'Announce Winners Now'}</span>
                  </button>
               </div>
            </div>
