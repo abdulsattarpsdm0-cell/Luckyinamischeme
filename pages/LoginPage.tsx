@@ -19,9 +19,13 @@ const LoginPage: React.FC = () => {
     setError('');
     
     try {
-      const success = await login(email, password);
-      if (success) {
-        navigate('/');
+      const result = await login(email, password);
+      if (result) {
+        if (result === 'ADMIN') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } else {
         setError('Invalid credentials. Check your email and password.');
       }

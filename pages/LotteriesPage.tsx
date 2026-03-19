@@ -1,47 +1,24 @@
 
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useUser } from '../context/UserContext.ts';
 import { Trophy, Ticket, CalendarDays, Clock, ChevronRight, Zap, Hash, Users } from 'lucide-react';
 
 const LotteriesPage: React.FC = () => {
   const { lotteryPlans, allTokens } = useUser();
-  const [activeCycle, setActiveCycle] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
 
   // ONLY SHOW ACTIVE PLANS ON USER FRONTEND
   const filteredPlans = useMemo(() => {
-    return lotteryPlans.filter(p => p.drawCycle === activeCycle && p.isActive);
-  }, [lotteryPlans, activeCycle]);
+    return lotteryPlans.filter(p => p.isActive);
+  }, [lotteryPlans]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 animate-in fade-in duration-500">
-      {/* Header & Tabs */}
+      {/* Header */}
       <div className="flex flex-col md:flex-row justify-between items-center mb-10 md:mb-16 space-y-6 md:space-y-0">
         <div className="text-center md:text-left">
           <h1 className="text-3xl md:text-5xl font-black text-[#1a233a] uppercase tracking-tight leading-none mb-2">Live Lotteries</h1>
           <p className="text-xs md:text-sm text-slate-500 font-medium italic">"Apni pasand ka plan select karein aur kismat azmaein!"</p>
-        </div>
-        
-        {/* Horizontal Scrolling Tabs on Mobile */}
-        <div className="flex bg-slate-100 p-1.5 rounded-2xl md:rounded-[2rem] border border-slate-200 shadow-sm w-full md:w-auto overflow-x-auto no-scrollbar">
-          <button
-            onClick={() => setActiveCycle('WEEKLY')}
-            className={`flex-1 md:flex-none md:px-10 py-3 rounded-xl md:rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 whitespace-nowrap ${
-              activeCycle === 'WEEKLY' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'
-            }`}
-          >
-            <Zap size={14} />
-            <span>Weekly Plans</span>
-          </button>
-          <button
-            onClick={() => setActiveCycle('MONTHLY')}
-            className={`flex-1 md:flex-none md:px-10 py-3 rounded-xl md:rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center justify-center space-x-2 whitespace-nowrap ${
-              activeCycle === 'MONTHLY' ? 'bg-pink-600 text-white shadow-lg' : 'text-slate-500 hover:bg-white/50'
-            }`}
-          >
-            <CalendarDays size={14} />
-            <span>Monthly Plans</span>
-          </button>
         </div>
       </div>
 
@@ -70,7 +47,7 @@ const LotteriesPage: React.FC = () => {
                  
                  {/* CLEAR TOKEN COUNT BADGE */}
                  <div className="absolute bottom-4 left-4 px-4 py-2 rounded-2xl bg-white/90 backdrop-blur-md text-[10px] md:text-xs font-black uppercase tracking-widest text-slate-900 shadow-xl border border-white z-10">
-                    Total {plan.totalTokens.toLocaleString()} Tokens
+                    Total {(plan.totalTokens || 0).toLocaleString()} Tokens
                  </div>
                  
                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-40"></div>
@@ -92,7 +69,7 @@ const LotteriesPage: React.FC = () => {
                 <div className="bg-indigo-600 rounded-2xl md:rounded-[2rem] p-4 md:p-6 mb-6 md:mb-8 text-white flex items-center justify-between shadow-lg shadow-indigo-100">
                    <div>
                       <span className="block text-[8px] md:text-[9px] font-black text-indigo-200 uppercase tracking-widest mb-1">Inami Item</span>
-                      <span className="text-lg md:text-xl font-black">{plan.prizeName || `Rs ${plan.prizePerWinner.toLocaleString()}`}</span>
+                      <span className="text-lg md:text-xl font-black">{plan.prizeName || `Rs ${(plan.prizePerWinner || 0).toLocaleString()}`}</span>
                    </div>
                    <div className="bg-white/20 p-2 rounded-lg">
                      <Zap size={18} className="text-white" />
@@ -137,7 +114,7 @@ const LotteriesPage: React.FC = () => {
                        <Hash size={14} className="text-emerald-500" />
                        <span className="uppercase tracking-widest text-[8px] md:text-[9px]">Total Numbers</span>
                     </div>
-                    <span className="text-slate-900 font-black">{plan.totalTokens.toLocaleString()} Spots</span>
+                    <span className="text-slate-900 font-black">{(plan.totalTokens || 0).toLocaleString()} Spots</span>
                   </div>
 
                   <div className="flex justify-between items-center text-[10px] md:text-xs font-bold text-slate-500 pt-3 md:pt-4 border-t border-slate-50">

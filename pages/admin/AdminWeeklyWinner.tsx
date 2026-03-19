@@ -1,16 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { Trophy, Star, Target, ShieldCheck, History, AlertCircle, XCircle, CheckCircle2, Play, Sparkles, X } from 'lucide-react';
 import { useUser } from '../../context/UserContext.ts';
 
-const AdminWinner: React.FC = () => {
+const AdminWeeklyWinner: React.FC = () => {
   const { lotteryPlans, allTokens, announceWinner } = useUser();
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
   const [drawMethod, setDrawMethod] = useState<'MANUAL' | 'RANDOM'>('MANUAL');
   const [winnersInputs, setWinnersInputs] = useState<string[]>(Array(10).fill(''));
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedPlan = lotteryPlans.find(p => p.id === activeCategory);
+  const weeklyPlans = lotteryPlans.filter(p => p.drawCycle === 'WEEKLY');
+  const selectedPlan = weeklyPlans.find(p => p.id === activeCategory);
 
   // Auto-generate random numbers if method is RANDOM
   useEffect(() => {
@@ -68,8 +68,8 @@ const AdminWinner: React.FC = () => {
     <div className="space-y-8 md:space-y-12 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight">Winner Draws</h1>
-          <p className="text-xs md:text-sm text-slate-500 font-medium italic">"Luck starts here - Live draw management."</p>
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 uppercase tracking-tight">Weekly Winner Draws</h1>
+          <p className="text-xs md:text-sm text-slate-500 font-medium italic">"Luck starts here - Live draw management for weekly plans."</p>
         </div>
         <button className="flex items-center space-x-2 bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 text-[10px] font-black uppercase tracking-widest text-indigo-600">
           <History size={16} />
@@ -79,15 +79,15 @@ const AdminWinner: React.FC = () => {
 
       {/* Adaptive Category Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-8">
-        {lotteryPlans.map((plan) => {
+        {weeklyPlans.map((plan) => {
           const soldCount = allTokens.filter(t => t.planId === plan.id && t.status === 'WAITING').length;
           return (
             <button 
               key={plan.id}
               onClick={() => setActiveCategory(plan.id)}
-              className="bg-white rounded-[2rem] p-6 md:p-10 border border-slate-100 text-left relative overflow-hidden group transition-all hover:shadow-xl active:scale-[0.98]"
+              className="bg-white rounded-[2rem] p-6 md:p-10 border border-slate-100 text-left relative overflow-hidden group transition-all hover:shadow-xl active:scale-[0.98] flex flex-col"
             >
-              <div className="relative z-10">
+              <div className="relative z-10 w-full">
                 <div className="flex justify-between items-start mb-4">
                   <span className="text-4xl group-hover:scale-110 transition-transform">{plan.icon}</span>
                   <div className="bg-slate-50 px-2 py-1 rounded-lg text-[8px] font-black text-slate-400 uppercase border border-slate-100">
@@ -103,7 +103,7 @@ const AdminWinner: React.FC = () => {
                   <div className="w-px bg-slate-100 h-6 mt-1"></div>
                   <div>
                     <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">Prize</span>
-                    <span className="text-sm font-black text-emerald-600">Rs {plan.prizePerWinner.toLocaleString()}</span>
+                    <span className="text-sm font-black text-emerald-600">Rs {(plan.prizePerWinner || 0).toLocaleString()}</span>
                   </div>
                 </div>
               </div>
@@ -113,6 +113,11 @@ const AdminWinner: React.FC = () => {
             </button>
           );
         })}
+        {weeklyPlans.length === 0 && (
+          <div className="col-span-full p-10 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[2rem]">
+            <p className="text-slate-400 font-black uppercase tracking-widest text-xs">No weekly plans found</p>
+          </div>
+        )}
       </div>
 
       {/* Responsive Winner Modal */}
@@ -195,4 +200,4 @@ const AdminWinner: React.FC = () => {
   );
 };
 
-export default AdminWinner;
+export default AdminWeeklyWinner;

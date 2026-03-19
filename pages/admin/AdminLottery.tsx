@@ -137,7 +137,7 @@ const AdminLottery: React.FC = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {lotteryPlans.map((lottery) => {
-          const soldCount = allTokens.filter(t => t.planId === lottery.id).length;
+          const soldCount = allTokens.filter(t => t.planId === lottery.id && t.status === 'WAITING').length;
           const soldPercentage = Math.round((soldCount / lottery.totalTokens) * 100);
 
           return (
@@ -188,7 +188,7 @@ const AdminLottery: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <span className="block text-[10px] text-slate-400 font-black uppercase tracking-widest leading-none mb-1">Prize</span>
-                      <span className="text-sm font-black text-emerald-600">{lottery.prizeName || `PKR ${lottery.prizePerWinner.toLocaleString()}`}</span>
+                      <span className="text-sm font-black text-emerald-600">{lottery.prizeName || `PKR ${(lottery.prizePerWinner || 0).toLocaleString()}`}</span>
                     </div>
                  </div>
 

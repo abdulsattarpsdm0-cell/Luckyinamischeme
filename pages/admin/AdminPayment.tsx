@@ -1,6 +1,6 @@
 
-import React, { useState } from 'react';
-import { Plus, Edit3, Trash2, CreditCard, X, Smartphone, Wallet, CheckCircle2 } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { Plus, Edit3, Trash2, CreditCard, X, Smartphone, Wallet, CheckCircle2, Upload, Image as ImageIcon, QrCode } from 'lucide-react';
 import { useUser, PaymentMethod } from '../../context/UserContext.ts';
 
 const AdminPayment: React.FC = () => {
@@ -8,12 +8,14 @@ const AdminPayment: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<Partial<PaymentMethod>>({
-    name: '', title: '', number: '', status: 'ACTIVE', type: 'Mobile Wallet'
+    name: '', title: '', number: '', status: 'ACTIVE', type: 'Mobile Wallet', logoUrl: '', qrCodeUrl: ''
   });
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const qrInputRef = useRef<HTMLInputElement>(null);
 
   const handleOpenAdd = () => {
     setIsEditing(false);
-    setFormData({ name: '', title: '', number: '', status: 'ACTIVE', type: 'Mobile Wallet' });
+    setFormData({ name: '', title: '', number: '', status: 'ACTIVE', type: 'Mobile Wallet', logoUrl: '', qrCodeUrl: '' });
     setShowModal(true);
   };
 
@@ -21,6 +23,21 @@ const AdminPayment: React.FC = () => {
     setIsEditing(true);
     setFormData(method);
     setShowModal(true);
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, field: 'logoUrl' | 'qrCodeUrl') => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 1024 * 1024) { // 1MB limit
+        alert("Image size should be less than 1MB");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setFormData({ ...formData, [field]: reader.result as string });
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -57,8 +74,12 @@ const AdminPayment: React.FC = () => {
             <div className={`h-2 ${method.status === 'ACTIVE' ? 'bg-indigo-600' : 'bg-slate-300'}`}></div>
             <div className="p-6 md:p-8 space-y-6">
                <div className="flex justify-between items-start">
-                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner">
-                     <CreditCard size={28} />
+                  <div className="w-14 h-14 bg-slate-50 rounded-2xl flex items-center justify-center text-indigo-600 shadow-inner overflow-hidden">
+                     {method.logoUrl ? (
+                       <img src={method.logoUrl} alt={method.name} className="w-full h-full object-cover" />
+                     ) : (
+                       <CreditCard size={28} />
+                     )}
                   </div>
                   <div className={`px-3 py-1.5 rounded-full text-[8px] font-black uppercase tracking-widest ${method.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
                     {method.status}
@@ -77,6 +98,11 @@ const AdminPayment: React.FC = () => {
                     <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Number</span>
                     <span className="font-black text-indigo-600 text-sm truncate block tracking-wider">{method.number}</span>
                   </div>
+                  {method.qrCodeUrl && (
+                    <div className="mt-4 flex justify-center">
+                      <img src={method.qrCodeUrl} alt="QR Code" className="w-24 h-24 object-contain rounded-xl border border-slate-200 p-1 bg-white" />
+                    </div>
+                  )}
                </div>
             </div>
             <div className="p-5 bg-slate-50/50 border-t border-slate-100 flex items-center space-x-3">
@@ -111,6 +137,57 @@ const AdminPayment: React.FC = () => {
                 <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 block">Number / Details</label>
                 <input required value={formData.number} onChange={e => setFormData({...formData, number: e.target.value})} className="w-full px-5 py-4 rounded-xl border-2 border-slate-100 focus:border-indigo-600 outline-none font-black text-indigo-600 text-sm tracking-wider" placeholder="03XXXXXXXXX" />
               </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 block">Logo Image</label>
+                  <div 
+                    onClick={() => logoInputRef.current?.click()}
+                    className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-300 transition-all overflow-hidden relative"
+                  >
+                    {formData.logoUrl ? (
+                      <img src={formData.logoUrl} alt="Logo" className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <>
+                        <ImageIcon size={20} className="text-slate-400 mb-1" />
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Upload Logo</span>
+                      </>
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={logoInputRef} 
+                    onChange={(e) => handleImageUpload(e, 'logoUrl')} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1 block">QR Code</label>
+                  <div 
+                    onClick={() => qrInputRef.current?.click()}
+                    className="h-24 border-2 border-dashed border-slate-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-50 hover:border-indigo-300 transition-all overflow-hidden relative"
+                  >
+                    {formData.qrCodeUrl ? (
+                      <img src={formData.qrCodeUrl} alt="QR Code" className="w-full h-full object-contain p-2" />
+                    ) : (
+                      <>
+                        <QrCode size={20} className="text-slate-400 mb-1" />
+                        <span className="text-[8px] font-bold text-slate-400 uppercase">Upload QR</span>
+                      </>
+                    )}
+                  </div>
+                  <input 
+                    type="file" 
+                    ref={qrInputRef} 
+                    onChange={(e) => handleImageUpload(e, 'qrCodeUrl')} 
+                    accept="image/*" 
+                    className="hidden" 
+                  />
+                </div>
+              </div>
+
               <button type="submit" className="w-full py-5 bg-indigo-600 text-white font-black rounded-xl uppercase tracking-widest shadow-xl text-[11px] active:scale-95 transition-all mt-4">
                 {isEditing ? 'Save Changes' : 'Launch Gateway'}
               </button>

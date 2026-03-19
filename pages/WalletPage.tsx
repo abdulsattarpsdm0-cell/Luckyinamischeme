@@ -37,6 +37,10 @@ const WalletPage: React.FC = () => {
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 1024 * 1024) {
+        alert("Image size should be less than 1MB");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setProofImage(reader.result as string);
@@ -126,7 +130,7 @@ const WalletPage: React.FC = () => {
                 </div>
                 <div className="space-y-1">
                   <span className="text-slate-400 text-[11px] font-black uppercase tracking-[0.25em] block">Available Funds</span>
-                  <div className="text-4xl md:text-6xl font-black tracking-tighter">Rs {user.walletBalance.toLocaleString()}</div>
+                  <div className="text-4xl md:text-6xl font-black tracking-tighter">Rs {(user.walletBalance || 0).toLocaleString()}</div>
                 </div>
               </div>
             </div>
@@ -234,7 +238,11 @@ const WalletPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {activeMethods.map((m) => (
                     <button key={m.id} type="button" onClick={() => setSelectedMethodId(m.id)} className={`p-6 rounded-3xl border-2 font-black transition-all flex flex-col items-center space-y-2 ${selectedMethodId === m.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-lg' : 'border-slate-100 text-slate-400 grayscale'}`}>
-                      <CreditCard size={24} />
+                      {m.logoUrl ? (
+                        <img src={m.logoUrl} alt={m.name} className="w-8 h-8 object-contain" />
+                      ) : (
+                        <CreditCard size={24} />
+                      )}
                       <span className="uppercase text-[10px] tracking-widest">{m.name}</span>
                     </button>
                   ))}
@@ -245,6 +253,12 @@ const WalletPage: React.FC = () => {
                     <p className="text-[9px] text-slate-400 uppercase font-black tracking-widest mb-3">Account Number ({currentMethod.name})</p>
                     <p className="text-3xl md:text-4xl font-black mb-1 tracking-tight">{currentMethod.number}</p>
                     <p className="text-xs font-bold text-emerald-400 uppercase">{currentMethod.title}</p>
+                    {currentMethod.qrCodeUrl && (
+                      <div className="mt-6 p-4 bg-white rounded-2xl inline-block">
+                        <img src={currentMethod.qrCodeUrl} alt="QR Code" className="w-32 h-32 object-contain" />
+                        <p className="text-[9px] text-slate-900 uppercase font-black tracking-widest mt-2 text-center">Scan to Pay</p>
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -316,7 +330,11 @@ const WalletPage: React.FC = () => {
                 <div className="grid grid-cols-2 gap-4">
                   {activeMethods.map((m) => (
                     <button key={m.id} type="button" onClick={() => setSelectedMethodId(m.id)} className={`p-6 rounded-3xl border-2 font-black transition-all flex flex-col items-center space-y-2 ${selectedMethodId === m.id ? 'border-indigo-600 bg-indigo-50 text-indigo-700 shadow-lg' : 'border-slate-100 text-slate-400 grayscale'}`}>
-                      <CreditCard size={24} />
+                      {m.logoUrl ? (
+                        <img src={m.logoUrl} alt={m.name} className="w-8 h-8 object-contain" />
+                      ) : (
+                        <CreditCard size={24} />
+                      )}
                       <span className="uppercase text-[10px] tracking-widest">{m.name}</span>
                     </button>
                   ))}

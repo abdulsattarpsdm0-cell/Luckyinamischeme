@@ -19,14 +19,15 @@ const Header: React.FC = () => {
   ];
 
   const authNavItems = isLoggedIn ? [
+    ...(isAdmin ? [{ label: 'Admin Panel', path: '/admin', icon: <ShieldCheck size={18} /> }] : []),
     { label: 'My Tokens', path: '/my-tokens', icon: <Trophy size={18} /> },
     { label: 'Wallet', path: '/wallet', icon: <Wallet size={18} /> },
     { label: 'Referral', path: '/referral', icon: <Share2 size={18} /> },
     { label: 'Profile', path: '/profile', icon: <UserIcon size={18} /> },
   ] : [];
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
@@ -61,16 +62,6 @@ const Header: React.FC = () => {
                 <span>{item.label}</span>
               </Link>
             ))}
-            
-            {isAdmin && (
-              <Link
-                to="/admin"
-                className="flex items-center space-x-1 px-4 py-2 rounded-md text-xs font-black bg-indigo-600 text-white shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all ml-2"
-              >
-                <ShieldCheck size={16} />
-                <span>ADMIN PANEL</span>
-              </Link>
-            )}
           </nav>
 
           {/* User Section */}
@@ -79,7 +70,7 @@ const Header: React.FC = () => {
               <>
                 <div className="hidden md:flex flex-col items-end mr-2">
                   <span className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Balance</span>
-                  <span className="text-sm font-black text-emerald-600">Rs {user.walletBalance.toLocaleString()}</span>
+                  <span className="text-sm font-black text-emerald-600">Rs {(user.walletBalance || 0).toLocaleString()}</span>
                 </div>
                 <button 
                   onClick={handleLogout}
@@ -128,17 +119,6 @@ const Header: React.FC = () => {
                    <span>Sign Up</span>
                 </Link>
               </div>
-            )}
-
-            {isAdmin && (
-               <Link
-                to="/admin"
-                onClick={() => setIsMenuOpen(false)}
-                className="flex items-center space-x-3 px-3 py-4 rounded-md text-base font-black bg-indigo-600 text-white mb-2"
-              >
-                <ShieldCheck size={20} />
-                <span>Go to Admin Dashboard</span>
-              </Link>
             )}
 
             {[...navItems, ...authNavItems].map((item) => (

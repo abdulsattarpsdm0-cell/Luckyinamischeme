@@ -23,9 +23,11 @@ import AdminLottery from './pages/admin/AdminLottery.tsx';
 import AdminUsers from './pages/admin/AdminUsers.tsx';
 import AdminDeposit from './pages/admin/AdminDeposit.tsx';
 import AdminWithdraw from './pages/admin/AdminWithdraw.tsx';
-import AdminWinner from './pages/admin/AdminWinner.tsx';
+import AdminWeeklyWinner from './pages/admin/AdminWeeklyWinner.tsx';
+import AdminMonthlyWinner from './pages/admin/AdminMonthlyWinner.tsx';
 import AdminPayment from './pages/admin/AdminPayment.tsx';
-import AdminSoldTokens from './pages/admin/AdminSoldTokens.tsx';
+import AdminWeeklySoldTokens from './pages/admin/AdminWeeklySoldTokens.tsx';
+import AdminMonthlySoldTokens from './pages/admin/AdminMonthlySoldTokens.tsx';
 import AdminReferrals from './pages/admin/AdminReferrals.tsx';
 import AdminSettings from './pages/admin/AdminSettings.tsx';
 
@@ -37,12 +39,14 @@ import {
   signInWithEmailAndPassword, 
   onAuthStateChanged, 
   signOut,
+  deleteUser,
   User as FirebaseUser
 } from 'firebase/auth';
 import { 
   doc, 
   setDoc, 
   getDoc, 
+  getDocs,
   onSnapshot, 
   collection, 
   updateDoc, 
@@ -51,7 +55,8 @@ import {
   orderBy,
   where,
   deleteDoc,
-  writeBatch
+  writeBatch,
+  runTransaction
 } from 'firebase/firestore';
 
 const AppContent: React.FC = () => {
@@ -79,11 +84,13 @@ const AppContent: React.FC = () => {
           <Route path="/admin" element={isAdmin ? <AdminLayout /> : (isLoggedIn ? <Navigate to="/" /> : <Navigate to="/login" />)}>
             <Route index element={<AdminDashboard />} />
             <Route path="lottery" element={<AdminLottery />} />
-            <Route path="sold-tokens" element={<AdminSoldTokens />} />
+            <Route path="weekly-tokens" element={<AdminWeeklySoldTokens />} />
+            <Route path="monthly-tokens" element={<AdminMonthlySoldTokens />} />
             <Route path="users" element={<AdminUsers />} />
             <Route path="deposits" element={<AdminDeposit />} />
             <Route path="withdrawals" element={<AdminWithdraw />} />
-            <Route path="winners" element={<AdminWinner />} />
+            <Route path="weekly-winners" element={<AdminWeeklyWinner />} />
+            <Route path="monthly-winners" element={<AdminMonthlyWinner />} />
             <Route path="payments" element={<AdminPayment />} />
             <Route path="referrals" element={<AdminReferrals />} />
             <Route path="settings" element={<AdminSettings />} />
@@ -108,6 +115,7 @@ const App: React.FC = () => {
   const [draws, setDraws] = useState<Draw[]>([]);
   const [whatsappContact, setWhatsappContact] = useState('923177730425');
   const [fbUser, setFbUser] = useState<FirebaseUser | null>(null);
+  const [isAuthReady, setIsAuthReady] = useState(false);
 
   // 1. Listen for Auth changes
   useEffect(() => {
@@ -118,6 +126,7 @@ const App: React.FC = () => {
         setUser({} as User);
         setTokens([]);
         setTransactions([]);
+        setIsAuthReady(true);
       }
     });
     return () => unsub();
@@ -127,13 +136,29 @@ const App: React.FC = () => {
   useEffect(() => {
     if (!fbUser) return;
 
-    const unsub = onSnapshot(doc(db, 'users', fbUser.uid), (snap) => {
+    const unsub = onSnapshot(doc(db, 'users', fbUser.uid), async (snap) => {
       if (snap.exists()) {
-        setUser(snap.data() as User);
+        const userData = snap.data() as User;
+        
+        // Auto-grant ADMIN role to the specific email
+        if (userData.email === 'abdulsattarpsdm0@gmail.com' && userData.role !== 'ADMIN') {
+          try {
+            await updateDoc(doc(db, 'users', fbUser.uid), { role: 'ADMIN' });
+            userData.role = 'ADMIN';
+          } catch (e) {
+            console.error("Failed to auto-grant admin role:", e);
+          }
+        }
+        
+        setUser(userData);
         setIsLoggedIn(true);
+        setIsAuthReady(true);
+      } else {
+        setIsAuthReady(true);
       }
     }, (err) => {
       console.warn("Firestore profile sync waiting for permissions...");
+      setIsAuthReady(true);
     });
 
     return () => unsub();
@@ -185,6 +210,17 @@ const App: React.FC = () => {
       } else {
         const plans = snap.docs.map(d => ({ ...d.data(), id: d.id } as LotteryPlan));
         
+        // Sort plans based on LOTTERY_PLANS order to maintain the correct sequence
+        plans.sort((a, b) => {
+          const indexA = LOTTERY_PLANS.findIndex(p => p.id === a.id);
+          const indexB = LOTTERY_PLANS.findIndex(p => p.id === b.id);
+          
+          if (indexA !== -1 && indexB !== -1) return indexA - indexB;
+          if (indexA !== -1) return -1;
+          if (indexB !== -1) return 1;
+          return a.name.localeCompare(b.name);
+        });
+
         // MIGRATION: Ensure static plans exist in Firestore (run once)
         try {
           if (user.role === 'ADMIN') {
@@ -253,12 +289,17 @@ const App: React.FC = () => {
 
   const login = async (email?: string, password?: string) => {
     if (!email || !password) return false;
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    const userDoc = await getDoc(doc(db, 'users', cred.user.uid));
+    if (userDoc.exists()) {
+      return userDoc.data().role === 'ADMIN' ? 'ADMIN' : 'USER';
+    }
     return true;
   };
 
   const signUp = async (userData: any) => {
     const res = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
+    const role = userData.email === 'abdulsattarpsdm0@gmail.com' ? 'ADMIN' : 'USER';
     const newUser: User = {
       id: res.user.uid,
       firstName: userData.firstName || '',
@@ -266,7 +307,7 @@ const App: React.FC = () => {
       username: userData.username || userData.email.split('@')[0],
       email: userData.email,
       mobile: userData.mobile || '',
-      role: 'USER',
+      role: role,
       password: userData.password,
       walletBalance: 0,
       referralCode: 'LUCKY' + Math.floor(1000 + Math.random() * 9000),
@@ -280,11 +321,22 @@ const App: React.FC = () => {
     return true;
   };
 
-  const logout = () => signOut(auth);
+  const logout = async () => {
+    await signOut(auth);
+  };
 
   const deleteAccount = async (userId: string) => {
     await deleteDoc(doc(db, 'users', userId));
-    if (user.id === userId) logout();
+    if (user.id === userId) {
+      if (auth.currentUser) {
+        try {
+          await deleteUser(auth.currentUser);
+        } catch (error) {
+          console.error("Error deleting auth user:", error);
+        }
+      }
+      await logout();
+    }
   };
 
   const addTokens = async (newTokens: Token[]) => {
@@ -322,20 +374,50 @@ const App: React.FC = () => {
 
   const updateTransactionStatus = async (id: string, status: 'APPROVED' | 'REJECTED') => {
     const txRef = doc(db, 'transactions', id);
-    const txSnap = await getDoc(txRef);
-    if (txSnap.exists()) {
-      const txData = txSnap.data() as Transaction;
-      if (txData.status === 'PENDING') {
-        const targetUser = users.find(u => u.username === txData.username);
-        if (targetUser) {
-          if (txData.type === 'DEPOSIT' && status === 'APPROVED') {
-            await updateUserBalance(targetUser.id, txData.netAmount);
-          } else if (txData.type === 'WITHDRAWAL' && status === 'REJECTED') {
-            await updateUserBalance(targetUser.id, txData.amount);
+    
+    try {
+      // Find the transaction first to get the username
+      const txDoc = await getDoc(txRef);
+      if (!txDoc.exists()) throw new Error("Transaction not found");
+      const txData = txDoc.data() as Transaction;
+      
+      if (txData.status !== 'PENDING') {
+        console.log(`Transaction ${id} is already ${txData.status}, skipping.`);
+        return;
+      }
+
+      // Find the user by username
+      const usersQuery = query(collection(db, 'users'), where('username', '==', txData.username));
+      const userDocs = await getDocs(usersQuery);
+      let userRef = null;
+      if (!userDocs.empty) {
+        userRef = doc(db, 'users', userDocs.docs[0].id);
+      }
+
+      await runTransaction(db, async (transaction) => {
+        const txSnap = await transaction.get(txRef);
+        if (!txSnap.exists()) {
+          throw new Error("Transaction does not exist!");
+        }
+        
+        const currentTxData = txSnap.data() as Transaction;
+        if (currentTxData.status !== 'PENDING') {
+          return;
+        }
+
+        if (userRef) {
+          if (currentTxData.type === 'DEPOSIT' && status === 'APPROVED') {
+            transaction.update(userRef, { walletBalance: increment(currentTxData.netAmount) });
+          } else if (currentTxData.type === 'WITHDRAWAL' && status === 'REJECTED') {
+            transaction.update(userRef, { walletBalance: increment(currentTxData.amount) });
           }
         }
-      }
-      await updateDoc(txRef, { status });
+        
+        transaction.update(txRef, { status });
+      });
+    } catch (error) {
+      console.error("Transaction failed: ", error);
+      throw error;
     }
   };
 
@@ -414,6 +496,14 @@ const App: React.FC = () => {
     // Re-enable the lottery plan so it's available for the next round
     await updateDoc(doc(db, 'lotteryPlans', planId), { isActive: true });
   };
+
+  if (!isAuthReady) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+      </div>
+    );
+  }
 
   return (
     <UserContext.Provider value={{ 

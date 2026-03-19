@@ -10,8 +10,14 @@ const AdminDeposit: React.FC = () => {
 
   const deposits = transactions.filter(t => t.type === 'DEPOSIT' && t.status === activeTab);
 
-  const handleAction = (id: string, status: 'APPROVED' | 'REJECTED') => {
-    updateTransactionStatus(id, status);
+  const handleAction = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      await updateTransactionStatus(id, status);
+      alert(`Transaction ${status} successfully.`);
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      alert("Failed to update transaction. Please try again.");
+    }
   };
 
   return (
@@ -88,11 +94,11 @@ const AdminDeposit: React.FC = () => {
                <div className="flex justify-between items-end">
                   <div className="min-w-0">
                     <p className="text-[8px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Bill</p>
-                    <h5 className="text-xl md:text-2xl font-black text-slate-900 truncate">Rs {dep.amount.toLocaleString()}</h5>
+                    <h5 className="text-xl md:text-2xl font-black text-slate-900 truncate">Rs {(dep.amount || 0).toLocaleString()}</h5>
                   </div>
                   <div className="text-right whitespace-nowrap">
                     <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Fee (10%)</span>
-                    <span className="text-[10px] font-bold text-red-500">Rs {dep.charges}</span>
+                    <span className="text-[10px] font-bold text-red-500">Rs {(dep.charges || 0).toLocaleString()}</span>
                   </div>
                </div>
 
@@ -104,7 +110,7 @@ const AdminDeposit: React.FC = () => {
                   <div className="h-px bg-white/5"></div>
                   <div className="flex justify-between items-center">
                     <span className="text-[9px] font-black text-slate-400 uppercase">To Add</span>
-                    <span className="text-lg font-black text-emerald-400">Rs {dep.netAmount.toLocaleString()}</span>
+                    <span className="text-lg font-black text-emerald-400">Rs {(dep.netAmount || 0).toLocaleString()}</span>
                   </div>
                </div>
 

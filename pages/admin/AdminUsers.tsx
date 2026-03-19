@@ -71,7 +71,7 @@ const AdminUsers: React.FC = () => {
               </div>
               <div className="text-right">
                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Balance</p>
-                <p className="text-sm font-black text-emerald-600 leading-none">Rs {u.walletBalance.toLocaleString()}</p>
+                <p className="text-sm font-black text-emerald-600 leading-none">Rs {(u.walletBalance || 0).toLocaleString()}</p>
               </div>
             </div>
             
@@ -128,7 +128,7 @@ const AdminUsers: React.FC = () => {
                     </div>
                   </td>
                   <td className="py-6 px-6 text-right font-black text-emerald-600">
-                    Rs {u.walletBalance.toLocaleString()}
+                    Rs {(u.walletBalance || 0).toLocaleString()}
                   </td>
                   <td className="py-6 px-8 text-right">
                     <button className="px-5 py-2.5 bg-slate-100 group-hover:bg-indigo-600 group-hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all">Manage Account</button>
@@ -204,7 +204,7 @@ const AdminUsers: React.FC = () => {
                            </div>
                            <div className="bg-white p-3 rounded-xl border border-indigo-50">
                               <span className="block text-[8px] font-black text-slate-400 uppercase">Winnings</span>
-                              <span className="text-sm font-black text-emerald-600">Rs {selectedUser.totalWinnings}</span>
+                              <span className="text-sm font-black text-emerald-600">Rs {(selectedUser.totalWinnings || 0).toLocaleString()}</span>
                            </div>
                         </div>
                     </div>
@@ -217,7 +217,7 @@ const AdminUsers: React.FC = () => {
                           <p className="text-[9px] font-black text-indigo-400 uppercase tracking-widest mb-2 flex items-center gap-2">
                              <Wallet size={12} /> Wallet Balance
                           </p>
-                          <h4 className="text-3xl md:text-4xl font-black mb-8 leading-none">Rs {selectedUser.walletBalance.toLocaleString()}</h4>
+                          <h4 className="text-3xl md:text-4xl font-black mb-8 leading-none">Rs {(selectedUser.walletBalance || 0).toLocaleString()}</h4>
                           
                           <div className="space-y-4">
                              <div className="relative">

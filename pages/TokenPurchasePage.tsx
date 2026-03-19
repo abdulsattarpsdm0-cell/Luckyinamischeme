@@ -215,7 +215,7 @@ const TokenPurchasePage: React.FC = () => {
                       <Wallet size={20} className="text-emerald-400" />
                       <div>
                          <span className="block text-[8px] font-black text-slate-400 uppercase tracking-widest">My Wallet</span>
-                         <span className="font-black text-base">Rs {user.walletBalance.toLocaleString()}</span>
+                         <span className="font-black text-base">Rs {(user.walletBalance || 0).toLocaleString()}</span>
                       </div>
                     </div>
                     <Link to="/wallet" className="text-[8px] font-black bg-white/10 hover:bg-white/20 px-3 py-1.5 rounded-lg uppercase tracking-widest transition-all">Deposit</Link>

@@ -9,6 +9,8 @@ export interface PaymentMethod {
   number: string;
   status: 'ACTIVE' | 'INACTIVE';
   type: string;
+  logoUrl?: string;
+  qrCodeUrl?: string;
 }
 
 interface UserContextType {
@@ -22,9 +24,9 @@ interface UserContextType {
   paymentMethods: PaymentMethod[];
   draws: Draw[];
   whatsappContact: string;
-  login: (email?: string, password?: string) => Promise<boolean>;
+  login: (email?: string, password?: string) => Promise<string | boolean>;
   signUp: (userData: any) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   deleteAccount: (userId: string) => Promise<void>;
   addTokens: (tokens: Token[]) => Promise<void>;
   updateBalance: (amount: number) => Promise<void>;

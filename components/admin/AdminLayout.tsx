@@ -26,7 +26,7 @@ const AdminLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout, tokens, transactions } = useUser();
 
-  const totalTokens = tokens.length;
+  const totalTokens = useMemo(() => tokens.filter(t => t.status === 'WAITING').length, [tokens]);
   const totalDeposits = useMemo(() => transactions.filter(t => t.type === 'DEPOSIT').length, [transactions]);
   const totalWithdrawals = useMemo(() => transactions.filter(t => t.type === 'WITHDRAWAL').length, [transactions]);
 
@@ -35,7 +35,7 @@ const AdminLayout: React.FC = () => {
   const [viewedWithdrawals, setViewedWithdrawals] = useState(() => parseInt(localStorage.getItem('admin_viewed_withdrawals') || '0'));
 
   useEffect(() => {
-    if (location.pathname === '/admin/sold-tokens' || totalTokens < viewedTokens) {
+    if (location.pathname === '/admin/weekly-tokens' || location.pathname === '/admin/monthly-tokens' || totalTokens < viewedTokens) {
       setViewedTokens(totalTokens);
       localStorage.setItem('admin_viewed_tokens', totalTokens.toString());
     }
@@ -63,11 +63,16 @@ const AdminLayout: React.FC = () => {
     { label: 'Dashboard', path: '/admin', icon: <LayoutDashboard size={20} /> },
     { label: 'Lottery Plans', path: '/admin/lottery', icon: <Ticket size={20} /> },
     { 
-      label: 'Sold Tokens', 
-      path: '/admin/sold-tokens', 
+      label: 'Weekly Sold Tokens', 
+      path: '/admin/weekly-tokens', 
       icon: <ClipboardList size={20} />, 
       badge: newTokens > 0 ? newTokens.toString() : null,
       badgeColor: 'bg-emerald-500'
+    },
+    { 
+      label: 'Monthly Sold Tokens', 
+      path: '/admin/monthly-tokens', 
+      icon: <ClipboardList size={20} />
     },
     { label: 'All Users', path: '/admin/users', icon: <Users size={20} /> },
     { label: 'Referrals', path: '/admin/referrals', icon: <Share2 size={20} /> },
@@ -85,7 +90,8 @@ const AdminLayout: React.FC = () => {
       badge: newWithdrawals > 0 ? newWithdrawals.toString() : null,
       badgeColor: 'bg-indigo-500'
     },
-    { label: 'Winners', path: '/admin/winners', icon: <Trophy size={20} /> },
+    { label: 'Weekly Winners', path: '/admin/weekly-winners', icon: <Trophy size={20} /> },
+    { label: 'Monthly Winners', path: '/admin/monthly-winners', icon: <Trophy size={20} /> },
     { label: 'Payments', path: '/admin/payments', icon: <CreditCard size={20} /> },
     { label: 'Settings', path: '/admin/settings', icon: <Settings size={20} /> },
   ];

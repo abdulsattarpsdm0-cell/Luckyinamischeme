@@ -18,8 +18,8 @@ const AdminDashboard: React.FC = () => {
   const stats = useMemo(() => {
     const pendingDeposits = transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'PENDING').length;
     const pendingWithdrawals = transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'PENDING').length;
-    const totalDeposits = transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((acc, curr) => acc + curr.amount, 0);
-    const totalPayouts = transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'APPROVED').reduce((acc, curr) => acc + curr.amount, 0);
+    const totalDeposits = transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+    const totalPayouts = transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'APPROVED').reduce((acc, curr) => acc + (curr.amount || 0), 0);
     
     return [
       { label: 'Total Users', value: users.length.toString(), icon: <Users size={20} />, color: 'bg-blue-600', sub: 'Registered Members' },

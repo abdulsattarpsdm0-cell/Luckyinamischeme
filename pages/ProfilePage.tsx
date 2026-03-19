@@ -22,15 +22,15 @@ const ProfilePage: React.FC = () => {
     alert("Profile updated successfully!");
   };
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 
-  const handleDeleteAccount = () => {
+  const handleDeleteAccount = async () => {
     const confirmDelete = window.confirm("Kya aap waqai apna account hamesha ke liye delete karna chahte hain? Ye amal wapis nahi ho sakega.");
     if (confirmDelete) {
-      deleteAccount(user.id);
+      await deleteAccount(user.id);
       alert("Aapka account delete kar diya gaya hai.");
       navigate('/login');
     }
@@ -94,18 +94,6 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="bg-white rounded-[40px] p-4 border border-slate-100 shadow-sm space-y-2">
-             {isAdmin && (
-               <Link 
-                to="/admin" 
-                className="w-full flex items-center space-x-4 px-6 py-4 rounded-3xl bg-indigo-600 text-white transition-all font-black uppercase text-xs tracking-widest group shadow-lg shadow-indigo-100 mb-2"
-              >
-                  <div className="w-10 h-10 bg-white/20 rounded-2xl flex items-center justify-center">
-                    <LayoutDashboard size={18} />
-                  </div>
-                  <span>Admin Dashboard</span>
-               </Link>
-             )}
-
              <button 
                onClick={handleLogout} 
                className="w-full flex items-center space-x-4 px-6 py-4 rounded-3xl text-slate-600 hover:bg-slate-50 transition-all font-black uppercase text-xs tracking-widest group"

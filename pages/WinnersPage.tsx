@@ -133,7 +133,7 @@ const WinnersPage: React.FC = () => {
                       {winnerInfo ? (
                         <div className="bg-emerald-50 border border-emerald-100 text-emerald-700 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm flex flex-col gap-1">
                           <span>Winner: {winnerInfo.username || 'Anonymous'}</span>
-                          <span className="text-emerald-900">Prize: Rs {winnerInfo.prize.toLocaleString()}</span>
+                          <span className="text-emerald-900">Prize: Rs {(winnerInfo.prize || 0).toLocaleString()}</span>
                         </div>
                       ) : (
                         <div className="bg-slate-50 border border-slate-100 text-slate-500 py-3 px-2 rounded-2xl text-[10px] font-black uppercase tracking-widest shadow-sm">

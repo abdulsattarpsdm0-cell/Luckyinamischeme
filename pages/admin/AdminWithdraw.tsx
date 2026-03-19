@@ -10,8 +10,14 @@ const AdminWithdraw: React.FC = () => {
   // Filter only WITHDRAWAL transactions from global state
   const withdrawals = transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === activeTab);
 
-  const handleAction = (id: string, status: 'APPROVED' | 'REJECTED') => {
-    updateTransactionStatus(id, status);
+  const handleAction = async (id: string, status: 'APPROVED' | 'REJECTED') => {
+    try {
+      await updateTransactionStatus(id, status);
+      alert(`Transaction ${status} successfully.`);
+    } catch (error) {
+      console.error("Error updating transaction:", error);
+      alert("Failed to update transaction. Please try again.");
+    }
   };
 
   const copyToClipboard = (text: string) => {
@@ -110,16 +116,16 @@ const AdminWithdraw: React.FC = () => {
                   <div className="bg-slate-900 rounded-3xl p-6 text-white space-y-4 shadow-xl flex-grow">
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Requested</span>
-                      <span className="font-bold">Rs {wid.amount.toLocaleString()}</span>
+                      <span className="font-bold">Rs {(wid.amount || 0).toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Service Fee</span>
-                      <span className="font-bold text-red-400">- Rs {wid.charges.toLocaleString()}</span>
+                      <span className="font-bold text-red-400">- Rs {(wid.charges || 0).toLocaleString()}</span>
                     </div>
                     <div className="h-px bg-white/10 my-2"></div>
                     <div className="flex justify-between items-center">
                       <span className="text-[10px] font-black text-indigo-400 uppercase tracking-widest">Send Exactly</span>
-                      <span className="text-xl font-black text-emerald-400">Rs {wid.netAmount.toLocaleString()}</span>
+                      <span className="text-xl font-black text-emerald-400">Rs {(wid.netAmount || 0).toLocaleString()}</span>
                     </div>
                     <div className="pt-4 mt-auto">
                       <p className="text-[8px] text-center text-slate-500 uppercase font-bold tracking-widest font-mono">TXID: {wid.id.slice(0, 12)}</p>
