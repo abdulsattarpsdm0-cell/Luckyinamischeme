@@ -4,16 +4,20 @@ import { useUser } from '../context/UserContext';
 import { Share2, Copy, Users, Gift, CheckCircle2, Send, Sparkles, TrendingUp, Info, ShieldAlert } from 'lucide-react';
 
 const ReferralPage: React.FC = () => {
-  const { user, lotteryPlans } = useUser();
-  const refLink = `${window.location.origin}/#/signup?ref=${user.referralCode}`;
+  const { user, users, lotteryPlans } = useUser();
+  // Only show rewards for plans where the referral system is ENABLED in Admin
+  const activeReferralPlans = lotteryPlans.filter(p => p.isReferralEnabled);
+
+  // Default global link to the first active plan if available
+  const defaultPlanId = activeReferralPlans.length > 0 ? activeReferralPlans[0].id : '';
+  const refLink = defaultPlanId 
+    ? `${window.location.origin}/#/signup?ref=${user.referralCode}&plan=${defaultPlanId}`
+    : `${window.location.origin}/#/signup?ref=${user.referralCode}`;
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(refLink);
     alert('Referral link copied to clipboard!');
   };
-
-  // Only show rewards for plans where the referral system is ENABLED in Admin
-  const activeReferralPlans = lotteryPlans.filter(p => p.isReferralEnabled);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 animate-in fade-in duration-700">
@@ -95,10 +99,22 @@ const ReferralPage: React.FC = () => {
                       )}
                    </div>
                    
-                   <p className="text-slate-500 text-xs font-medium mb-10 leading-relaxed">
+                   <p className="text-slate-500 text-xs font-medium mb-6 leading-relaxed">
                      Invite friends who purchase <span className="text-slate-900 font-black">{plan.name}</span> tokens. <br/>
                      Every <span className="font-black text-indigo-600">{threshold} users</span> = <span className="font-black text-emerald-600">{plan.referralRewardCount} FREE TOKEN(S)</span>.
                    </p>
+
+                   <button
+                     onClick={() => {
+                       const planLink = `${window.location.origin}/#/signup?ref=${user.referralCode}&plan=${plan.id}`;
+                       navigator.clipboard.writeText(planLink);
+                       alert(`${plan.name} referral link copied!`);
+                     }}
+                     className="w-full mb-8 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 py-3 rounded-2xl font-black flex items-center justify-center space-x-2 transition-all active:scale-95 uppercase tracking-widest text-[10px] border border-indigo-100"
+                   >
+                     <Copy size={14} />
+                     <span>Copy {plan.name} Link</span>
+                   </button>
                    
                    <div className="mb-10">
                      <div className="flex justify-between text-[10px] font-black text-slate-400 mb-3 uppercase tracking-[0.2em]">
@@ -113,12 +129,42 @@ const ReferralPage: React.FC = () => {
                      </div>
                    </div>
                    
-                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                   <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100 mb-6">
                       <div className="flex items-center space-x-2">
                          <Gift size={16} className="text-indigo-400" />
                          <span className="text-[10px] font-black text-slate-500 uppercase">Total Free Tokens</span>
                       </div>
                       <span className="font-black text-slate-900 text-sm">{(rewardCycles * plan.referralRewardCount)} Earned</span>
+                   </div>
+
+                   {/* List of Referred Users */}
+                   <div className="mt-8 pt-8 border-t border-slate-100">
+                     <h5 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mb-4">Recent Referrals</h5>
+                     {users.filter(u => u.referredBy === user.referralCode && u.referredForPlan === plan.id).length > 0 ? (
+                       <div className="space-y-3 max-h-48 overflow-y-auto pr-2 custom-scrollbar">
+                         {users
+                           .filter(u => u.referredBy === user.referralCode && u.referredForPlan === plan.id)
+                           .sort((a, b) => new Date(b.joinDate || '').getTime() - new Date(a.joinDate || '').getTime())
+                           .map(referredUser => (
+                           <div key={referredUser.id} className="flex items-center justify-between bg-slate-50 p-3 rounded-xl border border-slate-100">
+                             <div className="flex items-center space-x-3">
+                               <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold text-xs">
+                                 {referredUser.firstName?.charAt(0) || referredUser.username?.charAt(0) || '?'}
+                               </div>
+                               <div>
+                                 <p className="text-xs font-bold text-slate-900">{referredUser.firstName} {referredUser.lastName}</p>
+                                 <p className="text-[9px] text-slate-500">@{referredUser.username}</p>
+                               </div>
+                             </div>
+                             <span className="text-[9px] font-bold text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md">Joined</span>
+                           </div>
+                         ))}
+                       </div>
+                     ) : (
+                       <div className="text-center py-6 bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                         <p className="text-[10px] font-bold text-slate-400 uppercase">No referrals yet</p>
+                       </div>
+                     )}
                    </div>
                  </div>
               </div>

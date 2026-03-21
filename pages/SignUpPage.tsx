@@ -20,13 +20,16 @@ const SignUpPage: React.FC = () => {
     mobile: '',
     password: '',
     confirmPassword: '',
-    refCode: ''
+    refCode: '',
+    refPlan: ''
   });
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const ref = params.get('ref');
+    const plan = params.get('plan');
     if (ref) setFormData(prev => ({ ...prev, refCode: ref }));
+    if (plan) setFormData(prev => ({ ...prev, refPlan: plan }));
   }, [location]);
 
   const handleSignUp = async (e: React.FormEvent) => {

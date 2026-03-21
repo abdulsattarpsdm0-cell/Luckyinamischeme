@@ -47,7 +47,7 @@ export interface Transaction {
   charges: number;
   netAmount: number;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
-  method: 'EasyPaisa' | 'JazzCash';
+  method: 'EasyPaisa' | 'JazzCash' | 'Referral Reward' | string;
   accountNumber?: string; 
   accountName?: string;   
   proofImage?: string;    
@@ -84,4 +84,7 @@ export interface User {
   activeReferrals: number; 
   totalWinnings: number;
   planReferralStats: Record<string, number>;
+  referredBy?: string;
+  referredForPlan?: string;
+  joinDate?: string;
 }

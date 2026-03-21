@@ -4,26 +4,36 @@ import { useUser } from '../context/UserContext.ts';
 
 const WinnersPage: React.FC = () => {
   const { lotteryPlans, draws } = useUser();
+  const [activeCycle, setActiveCycle] = useState<'WEEKLY' | 'MONTHLY'>('WEEKLY');
   const [activeTab, setActiveTab] = useState<string>('');
   const [latestDrawId, setLatestDrawId] = useState<string>('');
 
-  // Auto-switch to the most recent draw's plan when a new draw comes in
+  // Auto-switch to the most recent draw's plan and cycle when a new draw comes in
   useEffect(() => {
     if (draws.length > 0) {
       const mostRecentDraw = draws[0];
       if (mostRecentDraw.id !== latestDrawId) {
         setLatestDrawId(mostRecentDraw.id);
-        setActiveTab(mostRecentDraw.planId);
+        const plan = lotteryPlans.find(p => p.id === mostRecentDraw.planId);
+        if (plan) {
+          setActiveCycle(plan.drawCycle);
+          setActiveTab(mostRecentDraw.planId);
+        }
       }
     }
-  }, [draws, latestDrawId]);
+  }, [draws, latestDrawId, lotteryPlans]);
 
-  // Initialize first tab when plans are loaded (fallback)
+  // Filter plans by active cycle
+  const filteredPlans = useMemo(() => {
+    return lotteryPlans.filter(p => p.drawCycle === activeCycle);
+  }, [lotteryPlans, activeCycle]);
+
+  // Initialize first tab when plans or cycle changes
   useEffect(() => {
-    if (lotteryPlans.length > 0 && !activeTab && draws.length === 0) {
-      setActiveTab(lotteryPlans[0].id);
+    if (filteredPlans.length > 0 && (!activeTab || !filteredPlans.find(p => p.id === activeTab))) {
+      setActiveTab(filteredPlans[0].id);
     }
-  }, [lotteryPlans, activeTab, draws.length]);
+  }, [filteredPlans, activeTab]);
 
   const selectedPlan = useMemo(() => lotteryPlans.find(p => p.id === activeTab), [lotteryPlans, activeTab]);
   
@@ -49,9 +59,33 @@ const WinnersPage: React.FC = () => {
         <p className="text-slate-500 text-lg font-medium italic">"Aapki qismat bhi yahan khul sakti hai!"</p>
       </div>
 
+      {/* Cycle Tabs (Weekly / Monthly) */}
+      <div className="flex justify-center gap-4 mb-8">
+        <button
+          onClick={() => setActiveCycle('WEEKLY')}
+          className={`px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest transition-all shadow-sm ${
+            activeCycle === 'WEEKLY'
+              ? 'bg-slate-900 text-white shadow-slate-300 shadow-xl scale-105'
+              : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          Weekly Winners
+        </button>
+        <button
+          onClick={() => setActiveCycle('MONTHLY')}
+          className={`px-10 py-4 rounded-full font-black text-sm uppercase tracking-widest transition-all shadow-sm ${
+            activeCycle === 'MONTHLY'
+              ? 'bg-slate-900 text-white shadow-slate-300 shadow-xl scale-105'
+              : 'bg-white text-slate-500 hover:bg-slate-50 border border-slate-200'
+          }`}
+        >
+          Monthly Winners
+        </button>
+      </div>
+
       {/* Dynamic Tabs based on Lottery Plans */}
       <div className="flex flex-wrap justify-center gap-3 mb-12">
-        {lotteryPlans.map((plan) => (
+        {filteredPlans.map((plan) => (
           <button
             key={plan.id}
             onClick={() => setActiveTab(plan.id)}

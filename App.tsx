@@ -315,9 +315,66 @@ const App: React.FC = () => {
       activeReferrals: 0,
       totalWinnings: 0,
       planReferralStats: {},
+      referredBy: userData.refCode || '',
+      referredForPlan: userData.refPlan || '',
       joinDate: new Date().toLocaleDateString()
     };
-    await setDoc(doc(db, 'users', res.user.uid), newUser);
+    
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'users', res.user.uid), newUser);
+
+    // If there is a referral code, update the referrer's stats
+    if (userData.refCode) {
+      const usersRef = collection(db, 'users');
+      const q = query(usersRef, where('referralCode', '==', userData.refCode));
+      const querySnapshot = await getDocs(q);
+      
+      if (!querySnapshot.empty) {
+        const referrerDoc = querySnapshot.docs[0];
+        const referrerData = referrerDoc.data() as User;
+        const referrerRef = doc(db, 'users', referrerDoc.id);
+        
+        const updates: any = {
+          referralsCount: increment(1)
+        };
+
+        // If a specific plan was referred, update that plan's stats
+        if (userData.refPlan) {
+          const currentPlanStats = referrerData.planReferralStats || {};
+          const currentCount = currentPlanStats[userData.refPlan] || 0;
+          const newCount = currentCount + 1;
+          updates[`planReferralStats.${userData.refPlan}`] = newCount;
+
+          // Check if they hit the threshold for free tokens
+          const plan = lotteryPlans.find(p => p.id === userData.refPlan);
+          if (plan && plan.isReferralEnabled && plan.referralThreshold > 0) {
+            if (newCount % plan.referralThreshold === 0) {
+              // They earned free tokens! Add equivalent value to their wallet
+              const rewardValue = plan.referralRewardCount * plan.tokenPrice;
+              updates.walletBalance = increment(rewardValue);
+              
+              // Also record a transaction for this reward
+              const txRef = doc(db, 'transactions', Math.random().toString(36).substr(2, 9));
+              batch.set(txRef, {
+                id: txRef.id,
+                date: new Date().toISOString(),
+                type: 'DEPOSIT',
+                amount: rewardValue,
+                charges: 0,
+                netAmount: rewardValue,
+                status: 'APPROVED',
+                method: 'Referral Reward',
+                username: referrerData.username
+              });
+            }
+          }
+        }
+
+        batch.update(referrerRef, updates);
+      }
+    }
+
+    await batch.commit();
     return true;
   };
 
